@@ -7,6 +7,5 @@ imgui.ini
 .bazelrc
 /out
 /bin
-/cmake
 /deps
 /libs
