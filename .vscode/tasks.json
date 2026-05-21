@@ -2,6 +2,24 @@
     "version": "2.0.0",
     "tasks": [
         {
+            "label": "CMake Build model_render (VS2022 Debug)",
+            "type": "shell",
+            "command": "cmake --build --preset build-vs2022-debug --target model_render",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "CMake Build selected example (VS2022 Debug)",
+            "type": "shell",
+            "command": "cmake --build --preset build-vs2022-debug --target ${input:exampleName}",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
             "label": "Build model_render (Debug)",
             "type": "shell",
             "command": "bazel build //model_render:model_render -c dbg",
@@ -27,6 +45,27 @@
                 "kind": "build",
                 "isDefault": false
             }
+        }
+    ],
+    "inputs": [
+        {
+            "type": "pickString",
+            "id": "exampleName",
+            "description": "Which example to build?",
+            "options": [
+                "bloom",
+                "compute",
+                "deferred",
+                "geom_shader",
+                "hdr",
+                "instancing",
+                "normal_map",
+                "pbr",
+                "post_processing",
+                "shadow_map",
+                "ssao",
+                "model_render"
+            ]
         }
     ]
 }

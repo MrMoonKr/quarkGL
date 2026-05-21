@@ -2,6 +2,24 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "type": "cppvsdbg",
+            "request": "launch",
+            "name": "CMake Debug model_render",
+            "preLaunchTask": "CMake Build model_render (VS2022 Debug)",
+            "program": "${workspaceFolder}/bin/Debug/model_render.exe",
+            "args": [],
+            "cwd": "${workspaceFolder}/bin/Debug"
+        },
+        {
+            "type": "cppvsdbg",
+            "request": "launch",
+            "name": "CMake Debug an example",
+            "preLaunchTask": "CMake Build selected example (VS2022 Debug)",
+            "program": "${workspaceFolder}/bin/Debug/${input:exampleName}.exe",
+            "args": [],
+            "cwd": "${workspaceFolder}/bin/Debug"
+        },
+        {
             "type": "cppdbg",
             "request": "launch",
             "name": "Debug model_render",
@@ -46,7 +64,8 @@
                 "pbr",
                 "post_processing",
                 "shadow_map",
-                "ssao"
+                "ssao",
+                "model_render"
             ]
         }
     ]

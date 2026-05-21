@@ -7,6 +7,17 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#if defined(_WIN32)
+#define NOMINMAX
+#include <windows.h>
+#ifdef near
+#undef near
+#endif
+#ifdef far
+#undef far
+#endif
+#endif
+
 #include "absl/flags/flag.h"
 #include "absl/flags/parse.h"
 #include "absl/flags/usage.h"
@@ -16,6 +27,56 @@
 #include "imgui_impl_opengl3.h"
 
 ABSL_FLAG(std::string, model, "", "Path to a model file");
+
+namespace {
+constexpr float kBaseImGuiFontSize = 13.0f;
+
+struct ImGuiScaleState {
+  float dpiScale = 0.0f;
+  ImGuiStyle baseStyle;
+};
+
+void enableHighDpiSupport() {
+#if defined(_WIN32)
+  if (!SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2)) {
+    SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE);
+  }
+#endif
+}
+
+float getWindowContentScale(GLFWwindow* window) {
+  float xScale = 1.0f;
+  float yScale = 1.0f;
+  glfwGetWindowContentScale(window, &xScale, &yScale);
+  return std::max(std::max(xScale, yScale), 1.0f);
+}
+
+void rebuildImGuiFontAtlas(float dpiScale) {
+  ImGuiIO& io = ImGui::GetIO();
+  io.Fonts->Clear();
+
+  ImFontConfig fontConfig;
+  fontConfig.SizePixels = kBaseImGuiFontSize * dpiScale;
+  io.Fonts->AddFontDefault(&fontConfig);
+
+  ImGui_ImplOpenGL3_DestroyFontsTexture();
+  ImGui_ImplOpenGL3_CreateFontsTexture();
+}
+
+void applyImGuiScale(GLFWwindow* window, ImGuiScaleState& state) {
+  const float dpiScale = getWindowContentScale(window);
+  if (std::abs(dpiScale - state.dpiScale) < 0.01f) return;
+
+  state.dpiScale = dpiScale;
+
+  ImGuiStyle& style = ImGui::GetStyle();
+  style = state.baseStyle;
+  style.ScaleAllSizes(dpiScale);
+
+  ImGui::GetIO().FontGlobalScale = 1.0f;
+  rebuildImGuiFontAtlas(dpiScale);
+}
+}  // namespace
 
 const char* lampShaderSource = R"SHADER(
 #version 460 core
@@ -184,14 +245,15 @@ void renderImGuiUI(ModelRenderOptions& opts, UIContext ctx) {
 
   ImGui::Begin("Model Render");
 
-  constexpr float IMAGE_BASE_SIZE = 160.0f;
+  const float uiScale = ImGui::GetFontSize() / kBaseImGuiFontSize;
+  const float imageBaseSize = 160.0f * uiScale;
 
   if (ImGui::CollapsingHeader("Model", ImGuiTreeNodeFlags_DefaultOpen)) {
     // Perform some shenanigans so that the gizmo rotates along with the
     // camera while still representing the same model rotation.
     glm::quat rotViewSpace =
         glm::quat_cast(ctx.camera.getViewTransform()) * opts.modelRotation;
-    ImGui::gizmo3D("Model rotation", rotViewSpace, IMAGE_BASE_SIZE);
+    ImGui::gizmo3D("Model rotation", rotViewSpace, imageBaseSize);
     opts.modelRotation =
         glm::quat_cast(glm::inverse(ctx.camera.getViewTransform())) *
         glm::normalize(rotViewSpace);
@@ -203,7 +265,7 @@ void renderImGuiUI(ModelRenderOptions& opts, UIContext ctx) {
     glm::vec3 dirViewSpace =
         glm::vec3(ctx.camera.getViewTransform() *
                   glm::vec4(opts.directionalDirection, 0.0f));
-    ImGui::gizmo3D("Light dir", dirViewSpace, IMAGE_BASE_SIZE);
+    ImGui::gizmo3D("Light dir", dirViewSpace, imageBaseSize);
     opts.directionalDirection =
         glm::vec3(glm::inverse(ctx.camera.getViewTransform()) *
                   glm::vec4(glm::normalize(dirViewSpace), 0.0f));
@@ -273,8 +335,8 @@ void renderImGuiUI(ModelRenderOptions& opts, UIContext ctx) {
       // Shadow map texture is a square, so extend both width/height by the
       // aspect ratio.
       imguiImage(ctx.shadowMap.getDepthTexture(),
-                 glm::vec2(IMAGE_BASE_SIZE * ctx.camera.getAspectRatio(),
-                           IMAGE_BASE_SIZE * ctx.camera.getAspectRatio()));
+                 glm::vec2(imageBaseSize * ctx.camera.getAspectRatio(),
+                           imageBaseSize * ctx.camera.getAspectRatio()));
       imguiFloatSlider("Cuboid extents", &opts.shadowCameraCuboidExtents, 0.1f,
                        50.0f, nullptr, Scale::LOG);
 
@@ -331,8 +393,8 @@ void renderImGuiUI(ModelRenderOptions& opts, UIContext ctx) {
       ImGui::Checkbox("SSAO", &opts.ssao);
       ImGui::BeginDisabled(!opts.ssao);
       imguiImage(ctx.ssaoBuffer.getSsaoTexture(),
-                 glm::vec2(IMAGE_BASE_SIZE * ctx.camera.getAspectRatio(),
-                           IMAGE_BASE_SIZE));
+                 glm::vec2(imageBaseSize * ctx.camera.getAspectRatio(),
+                           imageBaseSize));
 
       imguiFloatSlider("SSAO radius", &opts.ssaoRadius, 0.01, 5.0, "%.04f",
                        Scale::LOG);
@@ -502,6 +564,8 @@ int main(int argc, char** argv) {
       "quarkGL model viewer. Usage:\n  model_render --model path/to/model.obj");
   absl::ParseCommandLine(argc, argv);
 
+  enableHighDpiSupport();
+
   qrk::Window win(1920, 1080, "Model Render", /* fullscreen */ false,
                   /* samples */ 0);
   win.setClearColor(glm::vec4(0.1f, 0.1f, 0.1f, 1.0f));
@@ -513,6 +577,8 @@ int main(int argc, char** argv) {
   ImGuiIO& io = ImGui::GetIO();
   ImGui_ImplGlfw_InitForOpenGL(win.getGlfwRef(), /*install_callbacks=*/true);
   ImGui_ImplOpenGL3_Init("#version 460 core");
+  ImGuiScaleState imguiScaleState = {.baseStyle = ImGui::GetStyle()};
+  applyImGuiScale(win.getGlfwRef(), imguiScaleState);
 
   // == Main setup ==
 
@@ -669,6 +735,7 @@ int main(int argc, char** argv) {
   win.enableFaceCull();
   win.loop([&](float deltaTime) {
     // ImGui logic.
+    applyImGuiScale(win.getGlfwRef(), imguiScaleState);
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();

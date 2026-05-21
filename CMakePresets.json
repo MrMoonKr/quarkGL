@@ -1,0 +1,41 @@
+{
+  "version": 6,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 24,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "vs2022-base",
+      "hidden": true,
+      "generator": "Visual Studio 17 2022",
+      "architecture": {
+        "value": "x64",
+        "strategy": "external"
+      },
+      "binaryDir": "${sourceDir}/out/build/${presetName}",
+      "cacheVariables": {
+        "CMAKE_CONFIGURATION_TYPES": "Debug"
+      }
+    },
+    {
+      "name": "vs2022-debug",
+      "displayName": "VS2022 Debug",
+      "inherits": "vs2022-base",
+      "cacheVariables": {
+        "QUARKGL_BUILD_EXAMPLES": "ON",
+        "QUARKGL_BUILD_MODEL_RENDER": "ON",
+        "QUARKGL_BUILD_TESTS": "OFF"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "build-vs2022-debug",
+      "displayName": "Build VS2022 Debug",
+      "configurePreset": "vs2022-debug",
+      "configuration": "Debug"
+    }
+  ]
+}

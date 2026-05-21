@@ -5,3 +5,8 @@ imgui.ini
 
 # Local .bazelrc is not checked in.
 .bazelrc
+/out
+/bin
+/cmake
+/deps
+/libs
