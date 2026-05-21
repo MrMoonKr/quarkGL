@@ -3,6 +3,8 @@
 #include <qrk/quarkgl.h>
 // clang-format on
 
+#include <cstdint>
+
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -226,7 +228,8 @@ static bool imguiFloatSlider(const char* desc, float* value, float min,
 
 // Helper for an image control.
 static void imguiImage(const qrk::Texture& texture, glm::vec2 size) {
-  ImTextureID texID = reinterpret_cast<void*>(texture.getId());
+  ImTextureID texID =
+      reinterpret_cast<void*>(static_cast<intptr_t>(texture.getId()));
   // Flip the image.
   ImGui::Image(texID, size, /*uv0=*/glm::vec2(0.0f, 1.0f),
                /*uv1=*/glm::vec2(1.0f, 0.0f));
@@ -234,6 +237,12 @@ static void imguiImage(const qrk::Texture& texture, glm::vec2 size) {
 
 // Non-normative context for UI rendering. Used for accessing renderer info.
 struct UIContext {
+  UIContext(qrk::Camera& cameraIn, qrk::ShadowMap& shadowMapIn,
+            qrk::SsaoBuffer& ssaoBufferIn)
+      : camera(cameraIn),
+        shadowMap(shadowMapIn),
+        ssaoBuffer(ssaoBufferIn) {}
+
   qrk::Camera& camera;
   qrk::ShadowMap& shadowMap;
   qrk::SsaoBuffer& ssaoBuffer;
@@ -577,7 +586,8 @@ int main(int argc, char** argv) {
   ImGuiIO& io = ImGui::GetIO();
   ImGui_ImplGlfw_InitForOpenGL(win.getGlfwRef(), /*install_callbacks=*/true);
   ImGui_ImplOpenGL3_Init("#version 460 core");
-  ImGuiScaleState imguiScaleState = {.baseStyle = ImGui::GetStyle()};
+  ImGuiScaleState imguiScaleState;
+  imguiScaleState.baseStyle = ImGui::GetStyle();
   applyImGuiScale(win.getGlfwRef(), imguiScaleState);
 
   // == Main setup ==
@@ -758,11 +768,7 @@ int main(int argc, char** argv) {
     opts.avgFPS = win.getAvgFPS();
 
     // Render UI.
-    UIContext ctx = {
-        .camera = *camera,
-        .shadowMap = *shadowMap,
-        .ssaoBuffer = *ssaoBlurredBuffer,
-    };
+    UIContext ctx(*camera, *shadowMap, *ssaoBlurredBuffer);
     renderImGuiUI(opts, ctx);
 
     // Post-process options. Some option values are used later during rendering.
