@@ -6,7 +6,7 @@ void CubemapRenderHelper::multipassDraw( Shader& shader,
                                          TextureRegistry* textureRegistry ) {
     // Set projection to a 90-degree, 1:1 aspect ratio in order to render a
     // single face of the cube.
-    shader.setMat4( "projection",
+    shader.setMat4( "u_projection",
                     glm::perspective( glm::radians( 90.0f ),
                                       /*aspect=*/1.0f, 0.1f, 10.0f ) );
 
@@ -35,7 +35,7 @@ void CubemapRenderHelper::multipassDraw( Shader& shader,
         buffer_->activate( targetMip_, cubemapFace );
         buffer_->clear();
 
-        shader.setMat4( "view", faceViews[ cubemapFace ] );
+        shader.setMat4( "u_view", faceViews[ cubemapFace ] );
         room_.draw( shader, textureRegistry );
     }
 

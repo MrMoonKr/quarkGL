@@ -10,7 +10,7 @@ out vec3 fragColor;
 
 uniform uint qrk_numSamples;
 
-vec2 integrateGGXBrdf(float NdotV, float roughness) {
+vec2 integrateGGXBrdf(float NdotV, float u_roughness) {
   // Reconstruct viewDir.
   vec3 viewDir;
   viewDir.x = sqrt(1.0 - NdotV * NdotV);
@@ -24,7 +24,7 @@ vec2 integrateGGXBrdf(float NdotV, float roughness) {
 
   for (uint i = 0u; i < qrk_numSamples; ++i) {
     vec2 Xi = qrk_hammersley(i, qrk_numSamples);
-    vec3 halfVector = qrk_importanceSampleGGX(normal, roughness, Xi);
+    vec3 halfVector = qrk_importanceSampleGGX(normal, u_roughness, Xi);
     // Reverse engineer the lightDir from the sampled halfVector.
     vec3 lightDir =
         normalize(2.0 * dot(viewDir, halfVector) * halfVector - viewDir);
@@ -35,7 +35,7 @@ vec2 integrateGGXBrdf(float NdotV, float roughness) {
       float NdotH = clamp(halfVector.z, 0.0, 1.0);
       float HdotV = clamp(dot(halfVector, viewDir), 0.0, 1.0);
 
-      float a = roughness * roughness;
+      float a = u_roughness * u_roughness;
       float V = qrk_visibilitySmithGGXCorrelated(NdotV, NdotL, a);
       // Calculate geometric visibility term. Simplified from a multiplication
       // by 4 * NdotV * NdotL, which normally gets cancelled in the correlated

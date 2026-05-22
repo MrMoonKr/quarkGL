@@ -56,11 +56,11 @@ int main() {
         lightRegistry->addLight( light );
     }
     // TODO: Pull this out into a material class.
-    mainShader.setVec3( "material.ambient", glm::vec3( 0.0f ) );
-    mainShader.setFloat( "material.shininess", 32.0f );
-    mainShader.setFloat( "material.emissionAttenuation.constant", 1.0f );
-    mainShader.setFloat( "material.emissionAttenuation.linear", 0.09f );
-    mainShader.setFloat( "material.emissionAttenuation.quadratic", 1.032f );
+    mainShader.setVec3( "u_material.ambient", glm::vec3( 0.0f ) );
+    mainShader.setFloat( "u_material.shininess", 32.0f );
+    mainShader.setFloat( "u_material.emissionAttenuation.constant", 1.0f );
+    mainShader.setFloat( "u_material.emissionAttenuation.linear", 0.09f );
+    mainShader.setFloat( "u_material.emissionAttenuation.quadratic", 1.032f );
 
     // Framebuffer.
     qrk::Framebuffer fb( win.getSize() );
@@ -112,16 +112,16 @@ int main() {
         fb.clear();
 
         mainShader.updateUniforms();
-        mainShader.setBool( "inverseNormals", true );
-        mainShader.setBool( "skipGamma", true );
+        mainShader.setBool( "u_inverseNormals", true );
+        mainShader.setBool( "u_skipGamma", true );
         tunnel.draw( mainShader );
 
         fb.deactivate();
 
         win.setViewport();
         screenShader.updateUniforms();
-        screenShader.setBool( "useHdr", useHdr );
-        screenShader.setInt( "toneMapTechnique", toneMapTechnique );
+        screenShader.setBool( "u_useHdr", useHdr );
+        screenShader.setInt( "u_toneMapTechnique", toneMapTechnique );
         screenQuad.draw( screenShader );
     } );
 

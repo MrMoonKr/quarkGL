@@ -41,11 +41,11 @@ int main() {
     lightRegistry->addLight( directionalLight );
 
     // TODO: Pull this out into a material class.
-    mainShader.setVec3( "material.ambient", glm::vec3( 0.1f ) );
-    mainShader.setFloat( "material.shininess", 32.0f );
-    mainShader.setFloat( "material.emissionAttenuation.constant", 1.0f );
-    mainShader.setFloat( "material.emissionAttenuation.linear", 0.09f );
-    mainShader.setFloat( "material.emissionAttenuation.quadratic", 0.032f );
+    mainShader.setVec3( "u_material.ambient", glm::vec3( 0.1f ) );
+    mainShader.setFloat( "u_material.shininess", 32.0f );
+    mainShader.setFloat( "u_material.emissionAttenuation.constant", 1.0f );
+    mainShader.setFloat( "u_material.emissionAttenuation.linear", 0.09f );
+    mainShader.setFloat( "u_material.emissionAttenuation.quadratic", 0.032f );
 
     // Setup shadow mapping.
     constexpr int SHADOW_MAP_SIZE = 1024;

@@ -13,9 +13,9 @@ const char* lampShaderSource = R"SHADER(
 #version 460 core
 out vec4 fragColor;
 
-uniform vec3 lightColor;
+uniform vec3 u_lightColor;
 
-void main() { fragColor = vec4(lightColor, 1.0); }
+void main() { fragColor = vec4(u_lightColor, 1.0); }
 )SHADER";
 
 int main() {
@@ -109,11 +109,11 @@ int main() {
         qrk::ShaderPath( "examples/shaders/deferred_lighting_ssao.frag" ) );
     lightingPassShader.addUniformSource( lightRegistry );
     lightingPassShader.addUniformSource( lightingPassTextures );
-    lightingPassShader.setVec3( "ambient", glm::vec3( 0.5f ) );
-    lightingPassShader.setFloat( "shininess", 16.0f );
-    lightingPassShader.setFloat( "emissionAttenuation.constant", 1.0f );
-    lightingPassShader.setFloat( "emissionAttenuation.linear", 0.09f );
-    lightingPassShader.setFloat( "emissionAttenuation.quadratic", 0.032f );
+    lightingPassShader.setVec3( "u_ambient", glm::vec3( 0.5f ) );
+    lightingPassShader.setFloat( "u_shininess", 16.0f );
+    lightingPassShader.setFloat( "u_emissionAttenuation.constant", 1.0f );
+    lightingPassShader.setFloat( "u_emissionAttenuation.linear", 0.09f );
+    lightingPassShader.setFloat( "u_emissionAttenuation.quadratic", 0.032f );
 
     qrk::ScreenShader screenShader;
 
@@ -191,7 +191,7 @@ int main() {
         win.setViewport();
 
         lightingPassShader.updateUniforms();
-        lightingPassShader.setBool( "useSsao", useSsao );
+        lightingPassShader.setBool( "u_useSsao", useSsao );
         // Bind textures.
         screenQuad.unsetTexture();
         screenQuad.draw( lightingPassShader, lightingPassTextures.get() );
@@ -207,7 +207,7 @@ int main() {
             lightCube.setModelTransform( glm::scale(
                 glm::translate( glm::mat4( 1.0f ), light->getPosition() ),
                 glm::vec3( 0.2f ) ) );
-            lampShader.setVec3( "lightColor", light->getDiffuse() );
+            lampShader.setVec3( "u_lightColor", light->getDiffuse() );
             lightCube.draw( lampShader );
         }
     } );

@@ -13,7 +13,7 @@ vec3 qrk_toneMapReinhard(vec3 color) { return color / (color + 1.0f); }
 
 /**
  * Tone maps an HDR color using Reinhard, but using a luminance-adjusted variant
- * for lower-band colors. Based on https://www.shadertoy.com/view/4dBcD1
+ * for lower-band colors. Based on https://www.shadertoy.com/u_view/4dBcD1
  */
 vec3 qrk_toneMapReinhardLuminance(vec3 color) {
   float luminance = qrk_luminance(color);

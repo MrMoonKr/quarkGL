@@ -4,11 +4,11 @@
 
 /**
  * Samples the GGX distribution along a given normal direction based on a given
- * roughness. Xi should be a 2D random sampled number in the range [0..1].
+ * u_roughness. Xi should be a 2D random sampled number in the range [0..1].
  * Returns the sampled halfvector in the space of the given normal.
  */
-vec3 qrk_importanceSampleGGX(vec3 normal, float roughness, vec2 Xi) {
-  float a = roughness * roughness;
+vec3 qrk_importanceSampleGGX(vec3 normal, float u_roughness, vec2 Xi) {
+  float a = u_roughness * u_roughness;
 
   // Our GGX is isotropic, so sample azimuth directly.
   float phi = 2.0 * PI * Xi.x;

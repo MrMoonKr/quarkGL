@@ -7,7 +7,7 @@ out vec4 fragColor;
 uniform sampler2D qrk_screenTexture;
 
 float lumaFromGammaCompressed(vec3 color) {
-  // sqrt is an approximate inverse gamma transformation.
+  // sqrt is an approximate inverse u_gamma transformation.
   return sqrt(dot(color, vec3(0.299, 0.587, 0.114)));
 }
 
@@ -68,8 +68,8 @@ void main() {
   float lumaUpCorners = lumaUpLeft + lumaUpRight;
   float lumaDownCorners = lumaDownLeft + lumaDownRight;
 
-  // Compute a gradient estimate for horizontal or vertical edges.
-  // - A horizontal edge separates "horizontal" groups of pixels - thus, we want
+  // Compute a gradient estimate for u_horizontal or vertical edges.
+  // - A u_horizontal edge separates "u_horizontal" groups of pixels - thus, we want
   //   to compare pixels vertically.
   // - A vertical edge separates "vertical" groups of pixels - thus, we want to
   //   compare pixels horizontally.

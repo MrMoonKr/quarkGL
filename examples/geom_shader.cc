@@ -34,11 +34,11 @@ int main() {
         qrk::ShaderPath( "examples/shaders/explode.geom" ) );
 
     // TODO: Pull this out into a material class.
-    mainShader.setVec3( "material.ambient", glm::vec3( 0.1f ) );
-    mainShader.setFloat( "material.shininess", 32.0f );
-    mainShader.setFloat( "material.emissionAttenuation.constant", 1.0f );
-    mainShader.setFloat( "material.emissionAttenuation.linear", 0.09f );
-    mainShader.setFloat( "material.emissionAttenuation.quadratic", 0.032f );
+    mainShader.setVec3( "u_material.ambient", glm::vec3( 0.1f ) );
+    mainShader.setFloat( "u_material.shininess", 32.0f );
+    mainShader.setFloat( "u_material.emissionAttenuation.constant", 1.0f );
+    mainShader.setFloat( "u_material.emissionAttenuation.linear", 0.09f );
+    mainShader.setFloat( "u_material.emissionAttenuation.quadratic", 0.032f );
 
     // Create light registry and add lights.
     auto registry = std::make_shared<qrk::LightRegistry>();
@@ -75,8 +75,8 @@ int main() {
 
         // Setup shader and lights.
         mainShader.activate();
-        mainShader.setMat4( "view", view );
-        mainShader.setMat4( "projection", projection );
+        mainShader.setMat4( "u_view", view );
+        mainShader.setMat4( "u_projection", projection );
 
         registry->applyViewTransform( view );
         mainShader.updateUniforms();
@@ -97,8 +97,8 @@ int main() {
         lightModel = glm::scale( lightModel, glm::vec3( 0.2f ) );
         lightCube.setModelTransform( lightModel );
         lampShader.activate();
-        lampShader.setMat4( "view", view );
-        lampShader.setMat4( "projection", projection );
+        lampShader.setMat4( "u_view", view );
+        lampShader.setMat4( "u_projection", projection );
         lightCube.draw( lampShader );
     } );
 

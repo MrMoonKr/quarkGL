@@ -31,7 +31,7 @@ public:
     ScreenLodShader();
 
     void setMipLevel( int mipLevel ) {
-        setFloat( "lod", static_cast<float>( mipLevel ) );
+        setFloat( "u_lod", static_cast<float>( mipLevel ) );
     }
 };
 

@@ -1,14 +1,14 @@
 #version 460 core
-layout(location = 0) in vec3 vertexPos;
+layout(location = 0) in vec3 a_position;
 
 out vec3 cubemapCoords;
 
-uniform mat4 view;
-uniform mat4 projection;
+uniform mat4 u_view;
+uniform mat4 u_projection;
 
 void main() {
-  // No model transform needed for an equirect projection.
-  gl_Position = projection * view * vec4(vertexPos, 1.0);
+  // No u_model transform needed for an equirect u_projection.
+  gl_Position = u_projection * u_view * vec4(a_position, 1.0);
   // The sample coordinates are equivalent to the interpolated vertex positions.
-  cubemapCoords = vertexPos;
+  cubemapCoords = a_position;
 }

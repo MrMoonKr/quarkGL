@@ -28,10 +28,10 @@ unsigned int GBuffer::bindTexture( unsigned int nextTextureUnit,
     albedoMetallicBuffer_.asTexture().bindToUnit( nextTextureUnit + 2 );
     emissionBuffer_.asTexture().bindToUnit( nextTextureUnit + 3 );
     // Bind sampler uniforms.
-    shader.setInt( "gPositionAO", nextTextureUnit + 0 );
-    shader.setInt( "gNormalRoughness", nextTextureUnit + 1 );
-    shader.setInt( "gAlbedoMetallic", nextTextureUnit + 2 );
-    shader.setInt( "gEmission", nextTextureUnit + 3 );
+    shader.setInt( "u_gPositionAO", nextTextureUnit + 0 );
+    shader.setInt( "u_gNormalRoughness", nextTextureUnit + 1 );
+    shader.setInt( "u_gAlbedoMetallic", nextTextureUnit + 2 );
+    shader.setInt( "u_gEmission", nextTextureUnit + 3 );
 
     return nextTextureUnit + 4;
 }

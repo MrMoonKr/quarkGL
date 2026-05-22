@@ -26,22 +26,22 @@ int main() {
                             qrk::ShaderPath( "examples/shaders/phong.frag" ) );
 
     // TODO: Pull this out into a material class.
-    mainShader.setVec3( "material.ambient", glm::vec3( 0.1f ) );
-    mainShader.setFloat( "material.shininess", 32.0f );
-    mainShader.setFloat( "material.emissionAttenuation.constant", 1.0f );
-    mainShader.setFloat( "material.emissionAttenuation.linear", 0.09f );
-    mainShader.setFloat( "material.emissionAttenuation.quadratic", 0.032f );
+    mainShader.setVec3( "u_material.ambient", glm::vec3( 0.1f ) );
+    mainShader.setFloat( "u_material.shininess", 32.0f );
+    mainShader.setFloat( "u_material.emissionAttenuation.constant", 1.0f );
+    mainShader.setFloat( "u_material.emissionAttenuation.linear", 0.09f );
+    mainShader.setFloat( "u_material.emissionAttenuation.quadratic", 0.032f );
 
     qrk::Shader instancedShader(
         qrk::ShaderPath( "examples/shaders/instancing.vert" ),
         qrk::ShaderPath( "examples/shaders/phong.frag" ) );
 
     // TODO: Pull this out into a material class.
-    instancedShader.setVec3( "material.ambient", glm::vec3( 0.1f ) );
-    instancedShader.setFloat( "material.shininess", 32.0f );
-    instancedShader.setFloat( "material.emissionAttenuation.constant", 1.0f );
-    instancedShader.setFloat( "material.emissionAttenuation.linear", 0.09f );
-    instancedShader.setFloat( "material.emissionAttenuation.quadratic",
+    instancedShader.setVec3( "u_material.ambient", glm::vec3( 0.1f ) );
+    instancedShader.setFloat( "u_material.shininess", 32.0f );
+    instancedShader.setFloat( "u_material.emissionAttenuation.constant", 1.0f );
+    instancedShader.setFloat( "u_material.emissionAttenuation.linear", 0.09f );
+    instancedShader.setFloat( "u_material.emissionAttenuation.quadratic",
                               0.032f );
 
     // Create light registry and add lights.
@@ -114,8 +114,8 @@ int main() {
 
         // Setup shader and lights.
         mainShader.activate();
-        mainShader.setMat4( "view", view );
-        mainShader.setMat4( "projection", projection );
+        mainShader.setMat4( "u_view", view );
+        mainShader.setMat4( "u_projection", projection );
         mainShader.updateUniforms();
 
         // Draw planet.
@@ -129,8 +129,8 @@ int main() {
 
         // Draw rocks.
         instancedShader.activate();
-        instancedShader.setMat4( "view", view );
-        instancedShader.setMat4( "projection", projection );
+        instancedShader.setMat4( "u_view", view );
+        instancedShader.setMat4( "u_projection", projection );
         registry->applyViewTransform( view );
         instancedShader.updateUniforms();
 

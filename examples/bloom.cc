@@ -61,11 +61,11 @@ int main() {
     }
 
     // TODO: Pull this out into a material class.
-    mainShader.setVec3( "material.ambient", glm::vec3( 0.0f ) );
-    mainShader.setFloat( "material.shininess", 32.0f );
-    mainShader.setFloat( "material.emissionAttenuation.constant", 1.0f );
-    mainShader.setFloat( "material.emissionAttenuation.linear", 0.09f );
-    mainShader.setFloat( "material.emissionAttenuation.quadratic", 1.032f );
+    mainShader.setVec3( "u_material.ambient", glm::vec3( 0.0f ) );
+    mainShader.setFloat( "u_material.shininess", 32.0f );
+    mainShader.setFloat( "u_material.emissionAttenuation.constant", 1.0f );
+    mainShader.setFloat( "u_material.emissionAttenuation.linear", 0.09f );
+    mainShader.setFloat( "u_material.emissionAttenuation.quadratic", 1.032f );
 
     // Create the scene.
     std::vector<qrk::Mesh*> meshes;
@@ -148,7 +148,7 @@ int main() {
 
     qrk::ScreenShader screenShader(
         qrk::ShaderPath( "examples/shaders/hdr.frag" ) );
-    screenShader.setBool( "useHdr", false );
+    screenShader.setBool( "u_useHdr", false );
     qrk::ScreenLodShader screenLodShader;
     qrk::ScreenShader bloomScreenShader(
         qrk::ShaderPath( "examples/shaders/bloom_screen.frag" ) );
@@ -206,7 +206,7 @@ int main() {
             lightCube.setModelTransform( glm::scale(
                 glm::translate( glm::mat4( 1.0f ), light->getPosition() ),
                 glm::vec3( 1.0f ) ) );
-            lampShader.setVec3( "lightColor", light->getDiffuse() );
+            lampShader.setVec3( "u_lightColor", light->getDiffuse() );
             lightCube.draw( lampShader );
         }
 
@@ -227,7 +227,7 @@ int main() {
                 int mipTarget = drawOptionResampleBloom - 1;
                 bloomPass.selectMip( mipTarget );
                 screenQuad.setTexture( bloomPass.getOutput() );
-                screenShader.setFloat( "colorStrength", 0.04f );
+                screenShader.setFloat( "u_colorStrength", 0.04f );
                 screenQuad.draw( screenShader );
                 bloomPass.deselectMip();
                 return;
@@ -236,16 +236,16 @@ int main() {
             // drawOptionResampleBloom == 0
             qrk::Texture bloomTexture = bloomPass.getOutput();
             bloomTexture.bindToUnit( 1 );
-            bloomScreenShader.setInt( "bloomTexture", 1 );
-            bloomScreenShader.setBool( "useBloom", useBloom );
-            bloomScreenShader.setBool( "interpolateBloom", true );
-            bloomScreenShader.setFloat( "bloomStrength", 0.04f );
+            bloomScreenShader.setInt( "u_bloomTexture", 1 );
+            bloomScreenShader.setBool( "u_useBloom", useBloom );
+            bloomScreenShader.setBool( "u_interpolateBloom", true );
+            bloomScreenShader.setFloat( "u_bloomStrength", 0.04f );
             screenQuad.setTexture( colorAttachment );
             screenQuad.draw( bloomScreenShader );
         } else {
             // Gaussian blur based bloom effect.
             if ( drawOptionBlurBloom == 1 ) {
-                screenShader.setFloat( "colorStrength", 1.0f );
+                screenShader.setFloat( "u_colorStrength", 1.0f );
                 screenQuad.setTexture( bloomAttachment );
                 screenQuad.draw( screenShader );
                 return;
@@ -261,7 +261,7 @@ int main() {
             qrk::Texture blurredTexture = blurBuffer.getOutput();
 
             if ( drawOptionBlurBloom == 2 ) {
-                screenShader.setFloat( "colorStrength", 1.0f );
+                screenShader.setFloat( "u_colorStrength", 1.0f );
                 screenQuad.setTexture( blurredTexture );
                 screenQuad.draw( screenShader );
                 return;
@@ -270,9 +270,9 @@ int main() {
             // drawOptionBlurBloom == 0
             qrk::Texture bloomTexture = blurredTexture;
             bloomTexture.bindToUnit( 1 );
-            bloomScreenShader.setInt( "bloomTexture", 1 );
-            bloomScreenShader.setBool( "useBloom", useBloom );
-            bloomScreenShader.setBool( "interpolateBloom", false );
+            bloomScreenShader.setInt( "u_bloomTexture", 1 );
+            bloomScreenShader.setBool( "u_useBloom", useBloom );
+            bloomScreenShader.setBool( "u_interpolateBloom", false );
             screenQuad.setTexture( colorAttachment );
             screenQuad.draw( bloomScreenShader );
         }

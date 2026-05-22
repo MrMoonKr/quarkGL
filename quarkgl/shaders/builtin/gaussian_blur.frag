@@ -4,9 +4,9 @@ in vec2 texCoords;
 
 out vec4 fragColor;
 
-uniform sampler2D screenTexture;
-uniform bool horizontal;
+uniform sampler2D u_screenTexture;
+uniform bool u_horizontal;
 
 void main() {
-  fragColor = qrk_gaussianBlurOnePass(screenTexture, texCoords, horizontal);
+  fragColor = qrk_gaussianBlurOnePass(u_screenTexture, texCoords, u_horizontal);
 }

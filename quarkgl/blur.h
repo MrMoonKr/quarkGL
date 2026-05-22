@@ -45,7 +45,7 @@ public:
     // Whether to perform a horizontal blur. If false, performs a vertical blur.
     void setHorizontal( bool horizontal ) {
         horizontal_ = horizontal;
-        setBool( "horizontal", horizontal_ );
+        setBool( "u_horizontal", horizontal_ );
     }
     bool getHorizontal() { return horizontal_; }
 

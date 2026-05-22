@@ -23,7 +23,7 @@ void main() {
   // We orient the sampling hemisphere in the direction of the cubemap sample
   // vector.
   vec3 normal = normalize(cubemapCoords);
-  // Simplifying assumption, we treat the sample output dir as the view dir.
+  // Simplifying assumption, we treat the sample output dir as the u_view dir.
   vec3 viewDir = normal;
 
   float totalWeight = 0.0;
@@ -38,7 +38,7 @@ void main() {
     // Make sure we ignore light directions that are behind the "virtual"
     // surface.
     if (NdotL > 0.0) {
-      // Choose mip level based on roughness / PDF. This avoids certain
+      // Choose mip level based on u_roughness / PDF. This avoids certain
       // "hotspot" artifacts due to the sampling method.
       // https://chetanjags.wordpress.com/2015/08/26/image-based-lighting/
       float NdotH = clamp(dot(normal, halfVector), 0.0, 1.0);

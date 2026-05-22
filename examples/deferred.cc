@@ -13,9 +13,9 @@ const char* lampShaderSource = R"SHADER(
 #version 460 core
 out vec4 fragColor;
 
-uniform vec3 lightColor;
+uniform vec3 u_lightColor;
 
-void main() { fragColor = vec4(lightColor, 1.0); }
+void main() { fragColor = vec4(u_lightColor, 1.0); }
 )SHADER";
 
 int main() {
@@ -111,11 +111,11 @@ int main() {
         qrk::ShaderPath( "examples/shaders/deferred_lighting.frag" ) );
     lightingPassShader.addUniformSource( lightRegistry );
     lightingPassShader.addUniformSource( textureRegistry );
-    lightingPassShader.setVec3( "ambient", glm::vec3( 0.05f ) );
-    lightingPassShader.setFloat( "emissionStrength", 5.0f );
-    lightingPassShader.setFloat( "emissionAttenuation.constant", 0.0f );
-    lightingPassShader.setFloat( "emissionAttenuation.linear", 0.0f );
-    lightingPassShader.setFloat( "emissionAttenuation.quadratic", 1.0f );
+    lightingPassShader.setVec3( "u_ambient", glm::vec3( 0.05f ) );
+    lightingPassShader.setFloat( "u_emissionStrength", 5.0f );
+    lightingPassShader.setFloat( "u_emissionAttenuation.constant", 0.0f );
+    lightingPassShader.setFloat( "u_emissionAttenuation.linear", 0.0f );
+    lightingPassShader.setFloat( "u_emissionAttenuation.quadratic", 1.0f );
 
     int gBufferVis = 0;
     constexpr int NUM_GBUFFER_VIS = 8;
@@ -199,7 +199,7 @@ int main() {
                     screenQuad.setTexture( gBuffer->getEmissionTexture() );
                     break;
             };
-            gBufferVisShader.setInt( "gBufferVis", gBufferVis );
+            gBufferVisShader.setInt( "u_gBufferVis", gBufferVis );
             screenQuad.draw( gBufferVisShader );
             return;
         }
@@ -223,7 +223,7 @@ int main() {
             lightCube.setModelTransform( glm::scale(
                 glm::translate( glm::mat4( 1.0f ), light->getPosition() ),
                 glm::vec3( 0.2f ) ) );
-            lampShader.setVec3( "lightColor", light->getDiffuse() );
+            lampShader.setVec3( "u_lightColor", light->getDiffuse() );
             lightCube.draw( lampShader );
         }
     } );

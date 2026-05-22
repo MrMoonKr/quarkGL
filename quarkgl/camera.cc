@@ -50,8 +50,8 @@ glm::mat4 Camera::getProjectionTransform() const {
 }
 
 void Camera::updateUniforms( Shader& shader ) {
-    shader.setMat4( "view", getViewTransform() );
-    shader.setMat4( "projection", getProjectionTransform() );
+    shader.setMat4( "u_view", getViewTransform() );
+    shader.setMat4( "u_projection", getProjectionTransform() );
 }
 
 void Camera::move( CameraDirection direction, float velocity ) {

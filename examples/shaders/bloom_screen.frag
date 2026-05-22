@@ -5,18 +5,18 @@ in vec2 texCoords;
 
 out vec4 fragColor;
 
-uniform sampler2D screenTexture;
-uniform sampler2D bloomTexture;
-uniform bool useBloom;
-uniform bool interpolateBloom;
-uniform float bloomStrength;
+uniform sampler2D u_screenTexture;
+uniform sampler2D u_bloomTexture;
+uniform bool u_useBloom;
+uniform bool u_interpolateBloom;
+uniform float u_bloomStrength;
 
 void main() {
-  vec3 color = texture(screenTexture, texCoords).rgb;
-  if (useBloom) {
-    vec3 bloomColor = texture(bloomTexture, texCoords).rgb;
-    if (interpolateBloom) {
-      color = mix(color, bloomColor, bloomStrength);
+  vec3 color = texture(u_screenTexture, texCoords).rgb;
+  if (u_useBloom) {
+    vec3 bloomColor = texture(u_bloomTexture, texCoords).rgb;
+    if (u_interpolateBloom) {
+      color = mix(color, bloomColor, u_bloomStrength);
     } else {
       color += bloomColor;
     }

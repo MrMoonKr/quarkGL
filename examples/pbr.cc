@@ -11,9 +11,9 @@ const char* lampShaderSource = R"SHADER(
 #version 460 core
 out vec4 fragColor;
 
-uniform vec3 lightColor;
+uniform vec3 u_lightColor;
 
-void main() { fragColor = vec4(lightColor, 1.0); }
+void main() { fragColor = vec4(u_lightColor, 1.0); }
 )SHADER";
 
 int main() {
@@ -73,12 +73,12 @@ int main() {
     qrk::CubeMesh lightCube;
 
     // TODO: Pull this out into a material class.
-    pbrShader.setVec3( "baseColor", glm::vec3( 0.5f, 0.0f, 0.0f ) );
-    pbrShader.setVec3( "material.ambient", glm::vec3( 0.03f ) );
-    pbrShader.setFloat( "material.shininess", 32.0f );
-    pbrShader.setFloat( "material.emissionAttenuation.constant", 0.0f );
-    pbrShader.setFloat( "material.emissionAttenuation.linear", 0.0f );
-    pbrShader.setFloat( "material.emissionAttenuation.quadratic", 1.0f );
+    pbrShader.setVec3( "u_baseColor", glm::vec3( 0.5f, 0.0f, 0.0f ) );
+    pbrShader.setVec3( "u_material.ambient", glm::vec3( 0.03f ) );
+    pbrShader.setFloat( "u_material.shininess", 32.0f );
+    pbrShader.setFloat( "u_material.emissionAttenuation.constant", 0.0f );
+    pbrShader.setFloat( "u_material.emissionAttenuation.linear", 0.0f );
+    pbrShader.setFloat( "u_material.emissionAttenuation.quadratic", 1.0f );
 
     // Prepare the sphere.
     constexpr int NUM_SPHERE_ROWS = 7;
@@ -138,16 +138,16 @@ int main() {
     win.loop( [ & ]( float deltaTime ) {
         pbrShader.updateUniforms();
 
-        pbrShader.setBool( "usePBR", usePBR );
-        pbrShader.setBool( "useTextures", useTextures );
+        pbrShader.setBool( "u_usePBR", usePBR );
+        pbrShader.setBool( "u_useTextures", useTextures );
 
         // Draw spheres.
         for ( int r = 0; r < NUM_SPHERE_ROWS; ++r ) {
-            pbrShader.setFloat( "metallic",
+            pbrShader.setFloat( "u_metallic",
                                 r / static_cast<float>( NUM_SPHERE_ROWS ) );
 
             for ( int c = 0; c < NUM_SPHERE_COLS; ++c ) {
-                pbrShader.setFloat( "roughness",
+                pbrShader.setFloat( "u_roughness",
                                     c / static_cast<float>( NUM_SPHERE_COLS ) );
 
                 float xOffset =
@@ -172,7 +172,7 @@ int main() {
             lightCube.setModelTransform( glm::scale(
                 glm::translate( glm::mat4( 1.0f ), light->getPosition() ),
                 glm::vec3( 1.0f ) ) );
-            lampShader.setVec3( "lightColor", light->getDiffuse() );
+            lampShader.setVec3( "u_lightColor", light->getDiffuse() );
             lightCube.draw( lampShader );
         }
     } );

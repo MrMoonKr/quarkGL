@@ -8,35 +8,35 @@ in vec2 texCoords;
 
 out vec4 fragColor;
 
-uniform sampler2D gPositionAO;
-uniform sampler2D gNormalRoughness;
-uniform sampler2D gAlbedoMetallic;
-uniform sampler2D gEmission;
+uniform sampler2D u_gPositionAO;
+uniform sampler2D u_gNormalRoughness;
+uniform sampler2D u_gAlbedoMetallic;
+uniform sampler2D u_gEmission;
 
-uniform vec3 ambient;
-uniform float emissionStrength;
-uniform QrkAttenuation emissionAttenuation;
+uniform vec3 u_ambient;
+uniform float u_emissionStrength;
+uniform QrkAttenuation u_emissionAttenuation;
 
 void main() {
   // Extract G-Buffer for PBR rendering.
-  vec3 fragPos_viewSpace = texture(gPositionAO, texCoords).rgb;
-  float fragAO = texture(gPositionAO, texCoords).a;
-  vec3 fragNormal_viewSpace = texture(gNormalRoughness, texCoords).rgb;
-  float fragRoughness = texture(gNormalRoughness, texCoords).a;
-  vec3 fragAlbedo = texture(gAlbedoMetallic, texCoords).rgb;
-  float fragMetallic = texture(gAlbedoMetallic, texCoords).a;
-  vec3 fragEmission = texture(gEmission, texCoords).rgb;
+  vec3 fragPos_viewSpace = texture(u_gPositionAO, texCoords).rgb;
+  float fragAO = texture(u_gPositionAO, texCoords).a;
+  vec3 fragNormal_viewSpace = texture(u_gNormalRoughness, texCoords).rgb;
+  float fragRoughness = texture(u_gNormalRoughness, texCoords).a;
+  vec3 fragAlbedo = texture(u_gAlbedoMetallic, texCoords).rgb;
+  float fragMetallic = texture(u_gAlbedoMetallic, texCoords).a;
+  vec3 fragEmission = texture(u_gEmission, texCoords).rgb;
 
   // Shade with normal lights.
   vec3 color = qrk_shadeAllLightsCookTorranceGGXDeferred(
       fragAlbedo, fragRoughness, fragMetallic, fragPos_viewSpace,
       fragNormal_viewSpace);
 
-  color += qrk_shadeAmbientDeferred(fragAlbedo, ambient, /*ao=*/1.0);
+  color += qrk_shadeAmbientDeferred(fragAlbedo, u_ambient, /*ao=*/1.0);
 
   // Add emissions.
-  color += qrk_shadeEmissionDeferred(fragEmission * emissionStrength,
-                                     fragPos_viewSpace, emissionAttenuation);
+  color += qrk_shadeEmissionDeferred(fragEmission * u_emissionStrength,
+                                     fragPos_viewSpace, u_emissionAttenuation);
 
   color = qrk_toneMapAcesApprox(color);
   color = qrk_gammaCorrect(color);

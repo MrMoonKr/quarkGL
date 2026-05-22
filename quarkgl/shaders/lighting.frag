@@ -39,7 +39,7 @@ struct QrkMaterial {
   // Material maps. Standard lighting logic only uses a single map, but
   // multiple maps are available in case user code wants to do something fancy.
 
-  // TODO: Consider splitting out phong / PBR material properties.
+  // TODO: Consider splitting out phong / PBR u_material properties.
   sampler2D diffuseMaps[QRK_MAX_DIFFUSE_TEXTURES];
   int diffuseCount;
 
@@ -61,16 +61,16 @@ struct QrkMaterial {
   sampler2D emissionMaps[QRK_MAX_EMISSION_TEXTURES];
   int emissionCount;
 
-  sampler2D normalMap;
+  sampler2D u_normalMap;
   bool hasNormalMap;
 
   // Ambient light factor.
-  vec3 ambient;
+  vec3 u_ambient;
 
-  float shininess;
+  float u_shininess;
 
   // TODO: Add emissionFactor.
-  QrkAttenuation emissionAttenuation;
+  QrkAttenuation u_emissionAttenuation;
 };
 
 struct QrkDirectionalLight {
@@ -101,91 +101,91 @@ struct QrkSpotLight {
   QrkAttenuation attenuation;
 };
 
-/** Extracts albedo from the material. */
-vec3 qrk_extractAlbedo(QrkMaterial material, vec2 texCoords) {
+/** Extracts albedo from the u_material. */
+vec3 qrk_extractAlbedo(QrkMaterial u_material, vec2 texCoords) {
   vec3 albedo = vec3(0.0);
-  if (material.diffuseCount > 0) {
-    albedo = texture(material.diffuseMaps[0], texCoords).rgb;
+  if (u_material.diffuseCount > 0) {
+    albedo = texture(u_material.diffuseMaps[0], texCoords).rgb;
   }
   return albedo;
 }
 
-/** Extracts specular from the material. */
-vec3 qrk_extractSpecular(QrkMaterial material, vec2 texCoords) {
+/** Extracts specular from the u_material. */
+vec3 qrk_extractSpecular(QrkMaterial u_material, vec2 texCoords) {
   // In the absence of a specular map, we just calculate a half specular
   // component.
   vec3 specular = vec3(0.5);
-  if (material.specularCount > 0) {
-    // We only need a single channel. Sometimes we treat metallic maps as
-    // specular maps, so extract from the blue channel in case the metallic map
-    // is part of a packed roughness/metallic texture.
-    specular = vec3(texture(material.specularMaps[0], texCoords).b);
+  if (u_material.specularCount > 0) {
+    // We only need a single channel. Sometimes we treat u_metallic maps as
+    // specular maps, so extract from the blue channel in case the u_metallic map
+    // is part of a packed u_roughness/u_metallic texture.
+    specular = vec3(texture(u_material.specularMaps[0], texCoords).b);
   }
   return specular;
 }
 
-/** Extracts roughness from the material. */
-float qrk_extractRoughness(QrkMaterial material, vec2 texCoords) {
-  float roughness = 0.5;
-  if (material.roughnessCount > 0) {
-    if (material.roughnessIsPacked[0]) {
-      // Part of a packed texture. Traditionally, roughness is the green
+/** Extracts u_roughness from the u_material. */
+float qrk_extractRoughness(QrkMaterial u_material, vec2 texCoords) {
+  float u_roughness = 0.5;
+  if (u_material.roughnessCount > 0) {
+    if (u_material.roughnessIsPacked[0]) {
+      // Part of a packed texture. Traditionally, u_roughness is the green
       // channel.
-      roughness = texture(material.roughnessMaps[0], texCoords).g;
+      u_roughness = texture(u_material.roughnessMaps[0], texCoords).g;
     } else {
       // Separate texture.
-      roughness = texture(material.roughnessMaps[0], texCoords).r;
+      u_roughness = texture(u_material.roughnessMaps[0], texCoords).r;
     }
   }
-  return roughness;
+  return u_roughness;
 }
 
-/** Extracts metallic from the material. */
-float qrk_extractMetallic(QrkMaterial material, vec2 texCoords) {
-  float metallic = 0.0;
-  if (material.metallicCount > 0) {
-    if (material.metallicIsPacked[0]) {
-      // Part of a packed texture. Traditionally, metallic is the blue channel.
-      metallic = texture(material.metallicMaps[0], texCoords).b;
+/** Extracts u_metallic from the u_material. */
+float qrk_extractMetallic(QrkMaterial u_material, vec2 texCoords) {
+  float u_metallic = 0.0;
+  if (u_material.metallicCount > 0) {
+    if (u_material.metallicIsPacked[0]) {
+      // Part of a packed texture. Traditionally, u_metallic is the blue channel.
+      u_metallic = texture(u_material.metallicMaps[0], texCoords).b;
     } else {
       // Separate texture.
-      metallic = texture(material.metallicMaps[0], texCoords).r;
+      u_metallic = texture(u_material.metallicMaps[0], texCoords).r;
     }
   }
-  return metallic;
+  return u_metallic;
 }
 
 /**
- * Extracts the ambient occlusion from the material. This is a value that can be
+ * Extracts the u_ambient occlusion from the u_material. This is a value that can be
  * directly multiplied with lighting, with 0 == fully occluded, and 1 == not at
  * all occluded.
  */
-float qrk_extractAmbientOcclusion(QrkMaterial material, vec2 texCoords) {
+float qrk_extractAmbientOcclusion(QrkMaterial u_material, vec2 texCoords) {
   float ao = 1.0;
-  if (material.aoCount > 0) {
-    // We could check `material.aoIsPacked[0]` here, but even in packed textures
+  if (u_material.aoCount > 0) {
+    // We could check `u_material.aoIsPacked[0]` here, but even in packed textures
     // we assume that AO is in the red channel, so we can avoid that check. :)
-    ao = texture(material.aoMaps[0], texCoords).r;
+    ao = texture(u_material.aoMaps[0], texCoords).r;
   }
   return ao;
 }
 
-/** Extracts emission from the material. */
-vec3 qrk_extractEmission(QrkMaterial material, vec2 texCoords) {
+/** Extracts emission from the u_material. */
+vec3 qrk_extractEmission(QrkMaterial u_material, vec2 texCoords) {
   vec3 emission = vec3(0.0);
-  if (material.emissionCount > 0) {
-    emission = texture(material.emissionMaps[0], texCoords).rgb;
+  if (u_material.emissionCount > 0) {
+    emission = texture(u_material.emissionMaps[0], texCoords).rgb;
   }
   return emission;
 }
 
 /**
- * Calculate a material's final alpha based on its set of diffuse textures.
+ * Calculate a u_material's final alpha based on its set of diffuse textures.
  */
-float qrk_materialAlpha(QrkMaterial material, vec2 texCoords) {
+float qrk_materialAlpha(QrkMaterial u_material, vec2 texCoords) {
   float sum = 0.0;
-  for (int i = 0; i < material.diffuseCount; i++) {
-    sum += texture(material.diffuseMaps[i], texCoords).a;
+  for (int i = 0; i < u_material.diffuseCount; i++) {
+    sum += texture(u_material.diffuseMaps[i], texCoords).a;
   }
   return min(sum, 1.0);
 }
@@ -222,48 +222,48 @@ float qrk_calcSpotLightIntensity(QrkSpotLight light, vec3 lightDir) {
 
 /** ============================ Ambient ============================ **/
 
-/** Calculate the ambient shading component. */
-vec3 qrk_shadeAmbientDeferred(vec3 albedo, vec3 ambient, float ao) {
-  return albedo * ambient * ao;
+/** Calculate the u_ambient shading component. */
+vec3 qrk_shadeAmbientDeferred(vec3 albedo, vec3 u_ambient, float ao) {
+  return albedo * u_ambient * ao;
 }
 
-/** Calculate shading for ambient component based on the given material. */
-vec3 qrk_shadeAmbient(QrkMaterial material, vec3 albedo, vec2 texCoords) {
-  float ao = qrk_extractAmbientOcclusion(material, texCoords);
-  return qrk_shadeAmbientDeferred(albedo, material.ambient, ao);
+/** Calculate shading for u_ambient component based on the given u_material. */
+vec3 qrk_shadeAmbient(QrkMaterial u_material, vec3 albedo, vec2 texCoords) {
+  float ao = qrk_extractAmbientOcclusion(u_material, texCoords);
+  return qrk_shadeAmbientDeferred(albedo, u_material.u_ambient, ao);
 }
 
 /** ============================ Emission ============================ **/
 
 /** Calculate deferred shading for emission based on an emission color. */
 vec3 qrk_shadeEmissionDeferred(vec3 emissionColor, vec3 fragPos_viewSpace,
-                               QrkAttenuation emissionAttenuation) {
+                               QrkAttenuation u_emissionAttenuation) {
   // Calculate emission attenuation towards camera.
   float fragDist = length(fragPos_viewSpace);
-  float attenuation = qrk_calcAttenuation(emissionAttenuation, fragDist);
+  float attenuation = qrk_calcAttenuation(u_emissionAttenuation, fragDist);
   // Emission component.
   return emissionColor * attenuation;
 }
 
-/** Calculate shading for emission textures on the given material. */
-vec3 qrk_shadeEmission(QrkMaterial material, vec3 fragPos_viewSpace,
+/** Calculate shading for emission textures on the given u_material. */
+vec3 qrk_shadeEmission(QrkMaterial u_material, vec3 fragPos_viewSpace,
                        vec2 texCoords) {
-  vec3 emission = qrk_extractEmission(material, texCoords);
+  vec3 emission = qrk_extractEmission(u_material, texCoords);
   return qrk_shadeEmissionDeferred(emission, fragPos_viewSpace,
-                                   material.emissionAttenuation);
+                                   u_material.u_emissionAttenuation);
 }
 
 /** ============================ Normals ============================ **/
 
 /**
- * Looks up a normal from the material, using the provided TBN matrix to
+ * Looks up a normal from the u_material, using the provided TBN matrix to
  * convert from tangent space to the target space, or returns a vertex normal
  * if no normal map is present.
  */
-vec3 qrk_getNormal(QrkMaterial material, vec2 texCoords, mat3 TBN,
+vec3 qrk_getNormal(QrkMaterial u_material, vec2 texCoords, mat3 TBN,
                    vec3 vertexNormal) {
-  if (material.hasNormalMap) {
-    return normalize(TBN * qrk_sampleNormalMap(material.normalMap, texCoords));
+  if (u_material.hasNormalMap) {
+    return normalize(TBN * qrk_sampleNormalMap(u_material.u_normalMap, texCoords));
   } else {
     return normalize(vertexNormal);
   }
@@ -277,14 +277,14 @@ float qrk_shadowBias(float minBias, float maxBias, vec3 normal, vec3 lightDir) {
 }
 
 /** Sample from a shadow map using 9-texel percentage-closer filtering. */
-float qrk_shadowSamplePCF(sampler2D shadowMap, vec2 shadowTexCoords,
+float qrk_shadowSamplePCF(sampler2D u_shadowMap, vec2 shadowTexCoords,
                           float currentDepth, float bias) {
   float shadow = 0.0;
-  vec2 texelOffset = 1.0 / textureSize(shadowMap, /*mip=*/0);
+  vec2 texelOffset = 1.0 / textureSize(u_shadowMap, /*mip=*/0);
   for (int x = -1; x <= 1; x++) {
     for (int y = -1; y <= 1; y++) {
       float pcfDepth =
-          texture(shadowMap, shadowTexCoords + vec2(x, y) * texelOffset).r;
+          texture(u_shadowMap, shadowTexCoords + vec2(x, y) * texelOffset).r;
       // Check whether in shadow.
       shadow += currentDepth - bias > pcfDepth ? 1.0 : 0.0;
     }
@@ -296,7 +296,7 @@ float qrk_shadowSamplePCF(sampler2D shadowMap, vec2 shadowTexCoords,
  * Calculate whether the given fragment is in shadow.
  * Returns 1.0 if in shadow, 0.0 if not.
  */
-float qrk_shadow(sampler2D shadowMap, vec4 fragPosLightSpace, float bias) {
+float qrk_shadow(sampler2D u_shadowMap, vec4 fragPosLightSpace, float bias) {
   // Perform perspective divide.
   vec3 projectedPos = fragPosLightSpace.xyz / fragPosLightSpace.w;
   // Shift to the range 0..1 so that we can compare with depth.
@@ -308,5 +308,5 @@ float qrk_shadow(sampler2D shadowMap, vec4 fragPosLightSpace, float bias) {
   }
   vec2 shadowTexCoords = projectedPos.xy;
   float currentDepth = projectedPos.z;
-  return qrk_shadowSamplePCF(shadowMap, shadowTexCoords, currentDepth, bias);
+  return qrk_shadowSamplePCF(u_shadowMap, shadowTexCoords, currentDepth, bias);
 }

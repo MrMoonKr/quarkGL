@@ -1,8 +1,8 @@
 #version 460 core
-layout(location = 0) in vec3 vertexPos;
-layout(location = 1) in vec3 vertexNormal;
-layout(location = 2) in vec3 vertexTangent;
-layout(location = 3) in vec2 vertexTexCoords;
+layout(location = 0) in vec3 a_position;
+layout(location = 1) in vec3 a_normal;
+layout(location = 2) in vec3 a_tangent;
+layout(location = 3) in vec2 a_uv;
 layout(location = 4) in mat4 instanceModel;
 
 out VS_OUT {
@@ -12,14 +12,14 @@ out VS_OUT {
 }
 vs_out;
 
-uniform mat4 view;
-uniform mat4 projection;
+uniform mat4 u_view;
+uniform mat4 u_projection;
 
 void main() {
-  gl_Position = projection * view * instanceModel * vec4(vertexPos, 1.0);
+  gl_Position = u_projection * u_view * instanceModel * vec4(a_position, 1.0);
 
-  vs_out.texCoords = vertexTexCoords;
-  vs_out.fragPos = vec3(view * instanceModel * vec4(vertexPos, 1.0));
+  vs_out.texCoords = a_uv;
+  vs_out.fragPos = vec3(u_view * instanceModel * vec4(a_position, 1.0));
   vs_out.fragNormal =
-      mat3(transpose(inverse(view * instanceModel))) * vertexNormal;
+      mat3(transpose(inverse(u_view * instanceModel))) * a_normal;
 }

@@ -9,21 +9,21 @@
 
 const char* textureVertexSource = R"SHADER(
 #version 460 core
-layout(location = 0) in vec3 vertexPos;
-layout(location = 1) in vec2 vertexTexCoords;
+layout(location = 0) in vec3 a_position;
+layout(location = 1) in vec2 a_uv;
 
 out vec2 texCoords;
 out vec3 fragPos;
 
-uniform mat4 model;
-uniform mat4 view;
-uniform mat4 projection;
+uniform mat4 u_model;
+uniform mat4 u_view;
+uniform mat4 u_projection;
 
 void main() {
-  gl_Position = projection * view * model * vec4(vertexPos, 1.0);
+  gl_Position = u_projection * u_view * u_model * vec4(a_position, 1.0);
 
-  texCoords = vertexTexCoords;
-  fragPos = vec3(view * model * vec4(vertexPos, 1.0));
+  texCoords = a_uv;
+  fragPos = vec3(u_view * u_model * vec4(a_position, 1.0));
 }
 )SHADER";
 
@@ -33,22 +33,22 @@ in vec2 texCoords;
 
 out vec4 fragColor;
 
-uniform sampler2D texture0;
+uniform sampler2D u_texture0;
 
-void main() { fragColor = texture(texture0, texCoords); }
+void main() { fragColor = texture(u_texture0, texCoords); }
 )SHADER";
 
 const char* screenVertexSource = R"SHADER(
 #version 460 core
-layout(location = 0) in vec2 vertexPos;
-layout(location = 1) in vec2 vertexTexCoords;
+layout(location = 0) in vec2 a_position;
+layout(location = 1) in vec2 a_uv;
 
 out vec2 texCoords;
 
 void main() {
-  gl_Position = vec4(vertexPos, 0.0, 1.0);
+  gl_Position = vec4(a_position, 0.0, 1.0);
 
-  texCoords = vertexTexCoords;
+  texCoords = a_uv;
 }
 )SHADER";
 
@@ -61,20 +61,20 @@ in vec2 texCoords;
 
 out vec4 fragColor;
 
-uniform sampler2D screenTexture;
+uniform sampler2D u_screenTexture;
 
 void main() {
   if (qrk_isWindowLeftHalf()) {
     if (qrk_isWindowTopHalf()) {
-      fragColor = texture(screenTexture, texCoords);
+      fragColor = texture(u_screenTexture, texCoords);
     } else {
-      fragColor = qrk_blurKernel(screenTexture, texCoords);
+      fragColor = qrk_blurKernel(u_screenTexture, texCoords);
     }
   } else {
     if (qrk_isWindowTopHalf()) {
-      fragColor = qrk_grayscale(texture(screenTexture, texCoords));
+      fragColor = qrk_grayscale(texture(u_screenTexture, texCoords));
     } else {
-      fragColor = qrk_edgeKernel(screenTexture, texCoords);
+      fragColor = qrk_edgeKernel(u_screenTexture, texCoords);
     }
   }
   fragColor.rgb = qrk_gammaCorrect(fragColor.rgb);
@@ -215,9 +215,9 @@ int main() {
 
         // Setup shader and textures for the framebuffer.
         mainShader.activate();
-        mainShader.setMat4( "view", view );
-        mainShader.setMat4( "projection", projection );
-        mainShader.setInt( "texture0", 0 );
+        mainShader.setMat4( "u_view", view );
+        mainShader.setMat4( "u_projection", projection );
+        mainShader.setInt( "u_texture0", 0 );
 
         glm::mat4 model( 1.0f );
 
@@ -226,18 +226,18 @@ int main() {
         cubeTexture.bindToUnit( 0 );
         model = glm::translate( glm::mat4( 1.0f ),
                                 glm::vec3( -1.0f, 0.0f, -1.0f ) );
-        mainShader.setMat4( "model", model );
+        mainShader.setMat4( "u_model", model );
         glDrawArrays( GL_TRIANGLES, 0, 36 );
 
         model =
             glm::translate( glm::mat4( 1.0f ), glm::vec3( 2.0f, 0.0f, 0.0f ) );
-        mainShader.setMat4( "model", model );
+        mainShader.setMat4( "u_model", model );
         glDrawArrays( GL_TRIANGLES, 0, 36 );
 
         // Draw floor.
         planeVarray.activate();
         floorTexture.bindToUnit( 0 );
-        mainShader.setMat4( "model", glm::mat4( 1.0f ) );
+        mainShader.setMat4( "u_model", glm::mat4( 1.0f ) );
         glDrawArrays( GL_TRIANGLES, 0, 6 );
         planeVarray.deactivate();
 
@@ -248,7 +248,7 @@ int main() {
         // Finally, draw to the screen based on the framebuffer contents.
         screenShader.updateUniforms();
         screenShader.activate();
-        screenShader.setInt( "screenTexture", 0 );
+        screenShader.setInt( "u_screenTexture", 0 );
         quadVarray.activate();
         glBindTexture( GL_TEXTURE_2D, colorAttachment.id );
         win->disableDepthTest();

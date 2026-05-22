@@ -14,21 +14,21 @@ fs_in;
 
 out vec4 fragColor;
 
-uniform QrkMaterial material;
-uniform bool skipGamma;
+uniform QrkMaterial u_material;
+uniform bool u_skipGamma;
 
 void main() {
   vec3 normal = normalize(fs_in.fragNormal);
 
   // Shade with normal lights.
-  vec3 result = qrk_shadeAllLightsBlinnPhong(material, fs_in.fragPos, normal,
+  vec3 result = qrk_shadeAllLightsBlinnPhong(u_material, fs_in.fragPos, normal,
                                              fs_in.texCoords);
 
   // Add emissions.
-  result += qrk_shadeEmission(material, fs_in.fragPos, fs_in.texCoords);
+  result += qrk_shadeEmission(u_material, fs_in.fragPos, fs_in.texCoords);
 
-  fragColor = vec4(result, qrk_materialAlpha(material, fs_in.texCoords));
-  if (!skipGamma) {
+  fragColor = vec4(result, qrk_materialAlpha(u_material, fs_in.texCoords));
+  if (!u_skipGamma) {
     fragColor.rgb = qrk_gammaCorrect(fragColor.rgb);
   }
 }

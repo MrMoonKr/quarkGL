@@ -3,6 +3,6 @@ in vec2 texCoords;
 
 out vec4 fragColor;
 
-uniform sampler2D screenTexture;
+uniform sampler2D u_screenTexture;
 
-void main() { fragColor = texture(screenTexture, texCoords); }
+void main() { fragColor = texture(u_screenTexture, texCoords); }

@@ -13,11 +13,11 @@ in VS_OUT {
 }
 gs_in[];
 
-uniform mat4 projection;
+uniform mat4 u_projection;
 
-/** Transform normals from view-space to clip-space. */
+/** Transform normals from u_view-space to clip-space. */
 vec3 projectNormal(vec3 viewSpaceNormal) {
-  return normalize(vec3(projection * vec4(viewSpaceNormal, 0.0)));
+  return normalize(vec3(u_projection * vec4(viewSpaceNormal, 0.0)));
 }
 
 void main() {

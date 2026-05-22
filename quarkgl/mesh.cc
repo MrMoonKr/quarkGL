@@ -64,7 +64,7 @@ void Mesh::loadInstanceModels( const glm::mat4* models, unsigned int size ) {
 void Mesh::drawWithTransform( const glm::mat4& transform, Shader& shader,
                               TextureRegistry* textureRegistry ) {
     // First we set the model transform, combining with the incoming transform.
-    shader.setMat4( "model", transform * getModelTransform() );
+    shader.setMat4( "u_model", transform * getModelTransform() );
 
     bindTextures( shader, textureRegistry );
 
@@ -96,7 +96,7 @@ void Mesh::initializeVertexArrayInstanceData() {
 }
 
 void Mesh::bindTextures( Shader& shader, TextureRegistry* textureRegistry ) {
-    // Bind textures. Assumes uniform naming is "material.textureMapType[idx]".
+    // Bind textures. Assumes uniform naming is "u_material.textureMapType[idx]".
     unsigned int diffuseIdx = 0;
     unsigned int specularIdx = 0;
     unsigned int roughnessIdx = 0;
@@ -117,13 +117,13 @@ void Mesh::bindTextures( Shader& shader, TextureRegistry* textureRegistry ) {
         Texture& texture = textureMap.getTexture();
         if ( type == TextureMapType::CUBEMAP ) {
             texture.bindToUnit( textureUnit, TextureBindType::CUBEMAP );
-            samplerName = "skybox";
+            samplerName = "u_skybox";
         } else {
             texture.bindToUnit( textureUnit, TextureBindType::TEXTURE_2D );
-            static std::string materialName = "material";
+            static std::string materialName = "u_material";
             std::ostringstream ss;
             // TODO: Make this more configurable / less generic?
-            ss << "material.";
+            ss << "u_material.";
 
             // A subset of texture types can be packed into a single texture,
             // which we set a uniform for.
@@ -163,7 +163,7 @@ void Mesh::bindTextures( Shader& shader, TextureRegistry* textureRegistry ) {
                     break;
                 case TextureMapType::NORMAL:
                     // Only a single normal map supported.
-                    ss << "normalMap";
+                    ss << "u_normalMap";
                     hasNormalMap = true;
                     break;
                 case TextureMapType::CUBEMAP:
@@ -185,13 +185,13 @@ void Mesh::bindTextures( Shader& shader, TextureRegistry* textureRegistry ) {
     if ( textureRegistry != nullptr ) {
         textureRegistry->popUsageBlock();
     }
-    shader.setInt( "material.diffuseCount", diffuseIdx );
-    shader.setInt( "material.specularCount", specularIdx );
-    shader.setInt( "material.roughnessCount", roughnessIdx );
-    shader.setInt( "material.metallicCount", metallicIdx );
-    shader.setInt( "material.aoCount", aoIdx );
-    shader.setInt( "material.emissionCount", emissionIdx );
-    shader.setInt( "material.hasNormalMap", hasNormalMap );
+    shader.setInt( "u_material.diffuseCount", diffuseIdx );
+    shader.setInt( "u_material.specularCount", specularIdx );
+    shader.setInt( "u_material.roughnessCount", roughnessIdx );
+    shader.setInt( "u_material.metallicCount", metallicIdx );
+    shader.setInt( "u_material.aoCount", aoIdx );
+    shader.setInt( "u_material.emissionCount", emissionIdx );
+    shader.setInt( "u_material.hasNormalMap", hasNormalMap );
 }
 
 void Mesh::glDraw() {

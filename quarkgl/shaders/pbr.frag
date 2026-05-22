@@ -28,7 +28,7 @@ float qrk_visibilitySmithGGXCorrelated(float NdotV, float NdotL, float a) {
 
 /**
  * Returns Schlick's approximation of the Fresnel factor.
- *   F(w_i, h) = F0 + (1 - F0) * (1 - (w_i • h))^5
+ *   F(w_i, h) = F0 + (1 - F0) * (1 - (w_i ??h))^5
  * where F0 is the surface reflectance at zero incidence.
  * https://en.wikipedia.org/wiki/Schlick%27s_approximation
  */
@@ -37,48 +37,48 @@ vec3 qrk_fresnelSchlick(float LdotH, vec3 F0) {
 }
 
 /**
- * A variant of Schlick's approximation that takes a roughness "fudge factor".
+ * A variant of Schlick's approximation that takes a u_roughness "fudge factor".
  * Meant to be used when computing the Fresnel factor on a prefiltered map (i.e.
  * a color that is actually sampled from many directions, not just 1).
  * https://seblagarde.wordpress.com/2011/08/17/hello-world/
  */
-vec3 qrk_fresnelSchlickRoughness(float LdotV, vec3 F0, float roughness) {
-  return F0 + (max(vec3(1.0 - roughness), F0) - F0) * pow(1.0 - LdotV, 5.0);
+vec3 qrk_fresnelSchlickRoughness(float LdotV, vec3 F0, float u_roughness) {
+  return F0 + (max(vec3(1.0 - u_roughness), F0) - F0) * pow(1.0 - LdotV, 5.0);
 }
 
 // TODO: Move to an IBL shader file.
 
 vec3 qrk_samplePrefilteredEnvMap(vec3 viewDir_worldSpace,
-                                 vec3 normal_worldSpace, float roughness,
+                                 vec3 normal_worldSpace, float u_roughness,
                                  samplerCube prefilteredEnvMap,
                                  float prefilteredEnvMapMaxLOD) {
   vec3 reflectionDir_worldSpace =
       reflect(-viewDir_worldSpace, normal_worldSpace);
-  float mipLevel = roughness * prefilteredEnvMapMaxLOD;
+  float mipLevel = u_roughness * prefilteredEnvMapMaxLOD;
   return textureLod(prefilteredEnvMap, reflectionDir_worldSpace, mipLevel).rgb;
 }
 
 vec2 qrk_sampleBrdfLUT(vec3 viewDir_worldSpace, vec3 normal_worldSpace,
-                       float roughness, sampler2D brdfLUT) {
+                       float u_roughness, sampler2D brdfLUT) {
   float NdotV = clamp(dot(normal_worldSpace, viewDir_worldSpace), 0.0, 1.0);
-  return texture(brdfLUT, vec2(NdotV, roughness)).rg;
+  return texture(brdfLUT, vec2(NdotV, u_roughness)).rg;
 }
 
-/** Calculate the ambient IBL shading component. */
+/** Calculate the u_ambient IBL shading component. */
 vec3 qrk_shadeAmbientIBLDeferred(vec3 albedo, vec3 irradiance,
                                  vec3 prefilteredEnvColor, vec2 envBRDF,
-                                 float roughness, float metallic, float ao,
+                                 float u_roughness, float u_metallic, float ao,
                                  vec3 viewDir, vec3 normal) {
   // Compute reflectance at normal incidence.
   vec3 F0 = vec3(0.04);
-  F0 = mix(F0, albedo, metallic);
+  F0 = mix(F0, albedo, u_metallic);
 
-  // Use the roughness-aware fresnel function to compute the specular component.
+  // Use the u_roughness-aware fresnel function to compute the specular component.
   vec3 F = qrk_fresnelSchlickRoughness(clamp(dot(normal, viewDir), 0.0, 1.0),
-                                       F0, roughness);
+                                       F0, u_roughness);
   vec3 kS = F;
   vec3 kD = 1.0 - kS;
-  kD *= 1.0 - metallic;
+  kD *= 1.0 - u_metallic;
 
   vec3 diffuse = kD * irradiance * albedo;
   // No need to multiply by kS, since F is already here.
@@ -88,28 +88,28 @@ vec3 qrk_shadeAmbientIBLDeferred(vec3 albedo, vec3 irradiance,
 }
 
 /**
- * Calculate shading for ambient IBL component based on the given
- * material.
+ * Calculate shading for u_ambient IBL component based on the given
+ * u_material.
  */
-vec3 qrk_shadeAmbientIrradiance(QrkMaterial material, vec2 texCoords,
+vec3 qrk_shadeAmbientIrradiance(QrkMaterial u_material, vec2 texCoords,
                                 vec3 irradiance, vec3 prefilteredEnvColor,
                                 vec2 envBRDF, vec3 viewDir, vec3 normal) {
-  vec3 albedo = qrk_extractAlbedo(material, texCoords);
-  float roughness = qrk_extractRoughness(material, texCoords);
-  float metallic = qrk_extractMetallic(material, texCoords);
-  float ao = qrk_extractAmbientOcclusion(material, texCoords);
+  vec3 albedo = qrk_extractAlbedo(u_material, texCoords);
+  float u_roughness = qrk_extractRoughness(u_material, texCoords);
+  float u_metallic = qrk_extractMetallic(u_material, texCoords);
+  float ao = qrk_extractAmbientOcclusion(u_material, texCoords);
   return qrk_shadeAmbientIBLDeferred(albedo, irradiance, prefilteredEnvColor,
-                                     envBRDF, roughness, metallic, ao, viewDir,
+                                     envBRDF, u_roughness, u_metallic, ao, viewDir,
                                      normal);
 }
 
 /**
- * Calculate the deferred Cook-Torrance shading model with diffuse, and
- * specular components, along with direct material colors. Does not include
+ * Calculate the deferred Cook-Torrance shading u_model with diffuse, and
+ * specular components, along with direct u_material colors. Does not include
  * attenuation.
  */
-vec3 qrk_shadeCookTorranceGGXDeferred(vec3 albedo, float roughness,
-                                      float metallic, vec3 lightDiffuse,
+vec3 qrk_shadeCookTorranceGGXDeferred(vec3 albedo, float u_roughness,
+                                      float u_metallic, vec3 lightDiffuse,
                                       vec3 lightSpecular, vec3 lightDir,
                                       vec3 viewDir, vec3 normal) {
   vec3 halfVector = normalize(lightDir + viewDir);
@@ -117,14 +117,14 @@ vec3 qrk_shadeCookTorranceGGXDeferred(vec3 albedo, float roughness,
   // Compute reflectance at normal incidence. For dielectrics (like plastic),
   // we use a typical F0 of 0.04, whereas metals tend to be more reflective
   // and also chromatic (they tint the reflection with their albedo).
-  // TODO: This can be extracted as a material parameter for more control.
+  // TODO: This can be extracted as a u_material parameter for more control.
   vec3 F0 = vec3(0.04);
-  F0 = mix(F0, albedo, metallic);
+  F0 = mix(F0, albedo, u_metallic);
 
-  // Incoming roughness should be "perceptually linear", so we remap it.
-  // We also clamp the roughness to a small value so as to avoid INF in some of
+  // Incoming u_roughness should be "perceptually linear", so we remap it.
+  // We also clamp the u_roughness to a small value so as to avoid INF in some of
   // the calculations.
-  float a = max(roughness * roughness, 0.002025);
+  float a = max(u_roughness * u_roughness, 0.002025);
 
   // TODO: Why abs() and not clamp?
   float NdotV = max(dot(normal, viewDir), 1e-4);
@@ -143,7 +143,7 @@ vec3 qrk_shadeCookTorranceGGXDeferred(vec3 albedo, float roughness,
   // Diffuse BRDF (Lambertian).
   // We remap the albedo for metals since they only have a specular component
   // and emit no diffuse light.
-  vec3 diffuseColor = (1.0 - metallic) * albedo;
+  vec3 diffuseColor = (1.0 - u_metallic) * albedo;
   vec3 diffuse = diffuseColor / PI;
 
   // Calculate radiance.
@@ -151,32 +151,32 @@ vec3 qrk_shadeCookTorranceGGXDeferred(vec3 albedo, float roughness,
 }
 
 /**
- * Calculate the Cook-Torrance shading model with diffuse, and specular
+ * Calculate the Cook-Torrance shading u_model with diffuse, and specular
  * components. Does not include attenuation.
  */
-vec3 qrk_shadeCookTorranceGGX(QrkMaterial material, vec3 lightDiffuse,
+vec3 qrk_shadeCookTorranceGGX(QrkMaterial u_material, vec3 lightDiffuse,
                               vec3 lightSpecular, vec3 lightDir, vec3 viewDir,
                               vec3 normal, vec2 texCoords) {
-  vec3 albedo = qrk_extractAlbedo(material, texCoords);
-  float roughness = qrk_extractRoughness(material, texCoords);
-  float metallic = qrk_extractMetallic(material, texCoords);
+  vec3 albedo = qrk_extractAlbedo(u_material, texCoords);
+  float u_roughness = qrk_extractRoughness(u_material, texCoords);
+  float u_metallic = qrk_extractMetallic(u_material, texCoords);
   // Use the deferred calculations, but do it directly, so it's not deferred.
   // :)
-  return qrk_shadeCookTorranceGGXDeferred(albedo, roughness, metallic,
+  return qrk_shadeCookTorranceGGXDeferred(albedo, u_roughness, u_metallic,
                                           lightDiffuse, lightSpecular, lightDir,
                                           viewDir, normal);
 }
 
 /** Calculate shading for a directional light source using deferred data. */
 vec3 qrk_shadeDirectionalLightCookTorranceGGXDeferred(
-    vec3 albedo, float roughness, float metallic, QrkDirectionalLight light,
+    vec3 albedo, float u_roughness, float u_metallic, QrkDirectionalLight light,
     vec3 fragPos, vec3 normal, float shadow) {
   vec3 lightDir = normalize(-light.direction);
   vec3 viewDir = normalize(-fragPos);
 
   float shadowMultiplier = 1.0 - shadow;
 
-  vec3 result = qrk_shadeCookTorranceGGXDeferred(albedo, roughness, metallic,
+  vec3 result = qrk_shadeCookTorranceGGXDeferred(albedo, u_roughness, u_metallic,
                                                  light.diffuse, light.specular,
                                                  lightDir, viewDir, normal);
   // Apply shadowing, if any.
@@ -184,20 +184,20 @@ vec3 qrk_shadeDirectionalLightCookTorranceGGXDeferred(
 }
 
 /** Calculate shading for a directional light source. */
-vec3 qrk_shadeDirectionalLightCookTorranceGGX(QrkMaterial material,
+vec3 qrk_shadeDirectionalLightCookTorranceGGX(QrkMaterial u_material,
                                               QrkDirectionalLight light,
                                               vec3 fragPos, vec3 normal,
                                               vec2 texCoords, float shadow) {
-  vec3 albedo = qrk_extractAlbedo(material, texCoords);
-  float roughness = qrk_extractRoughness(material, texCoords);
-  float metallic = qrk_extractMetallic(material, texCoords);
+  vec3 albedo = qrk_extractAlbedo(u_material, texCoords);
+  float u_roughness = qrk_extractRoughness(u_material, texCoords);
+  float u_metallic = qrk_extractMetallic(u_material, texCoords);
   return qrk_shadeDirectionalLightCookTorranceGGXDeferred(
-      albedo, roughness, metallic, light, fragPos, normal, shadow);
+      albedo, u_roughness, u_metallic, light, fragPos, normal, shadow);
 }
 
 /** Calculate shading for a point light source using deferred data. */
-vec3 qrk_shadePointLightCookTorranceGGXDeferred(vec3 albedo, float roughness,
-                                                float metallic,
+vec3 qrk_shadePointLightCookTorranceGGXDeferred(vec3 albedo, float u_roughness,
+                                                float u_metallic,
                                                 QrkPointLight light,
                                                 vec3 fragPos, vec3 normal) {
   vec3 lightDir = normalize(light.position - fragPos);
@@ -207,7 +207,7 @@ vec3 qrk_shadePointLightCookTorranceGGXDeferred(vec3 albedo, float roughness,
   float lightDist = length(light.position - fragPos);
   float attenuation = qrk_calcAttenuation(light.attenuation, lightDist);
 
-  vec3 result = qrk_shadeCookTorranceGGXDeferred(albedo, roughness, metallic,
+  vec3 result = qrk_shadeCookTorranceGGXDeferred(albedo, u_roughness, u_metallic,
                                                  light.diffuse, light.specular,
                                                  lightDir, viewDir, normal);
   // Apply attenuation.
@@ -215,19 +215,19 @@ vec3 qrk_shadePointLightCookTorranceGGXDeferred(vec3 albedo, float roughness,
 }
 
 /** Calculate shading for a point light source. */
-vec3 qrk_shadePointLightCookTorranceGGX(QrkMaterial material,
+vec3 qrk_shadePointLightCookTorranceGGX(QrkMaterial u_material,
                                         QrkPointLight light, vec3 fragPos,
                                         vec3 normal, vec2 texCoords) {
-  vec3 albedo = qrk_extractAlbedo(material, texCoords);
-  float roughness = qrk_extractRoughness(material, texCoords);
-  float metallic = qrk_extractMetallic(material, texCoords);
-  return qrk_shadePointLightCookTorranceGGXDeferred(albedo, roughness, metallic,
+  vec3 albedo = qrk_extractAlbedo(u_material, texCoords);
+  float u_roughness = qrk_extractRoughness(u_material, texCoords);
+  float u_metallic = qrk_extractMetallic(u_material, texCoords);
+  return qrk_shadePointLightCookTorranceGGXDeferred(albedo, u_roughness, u_metallic,
                                                     light, fragPos, normal);
 }
 
 /** Calculate shading for a spot light source using deferred data. */
-vec3 qrk_shadeSpotLightCookTorranceGGXDeferred(vec3 albedo, float roughness,
-                                               float metallic,
+vec3 qrk_shadeSpotLightCookTorranceGGXDeferred(vec3 albedo, float u_roughness,
+                                               float u_metallic,
                                                QrkSpotLight light, vec3 fragPos,
                                                vec3 normal) {
   vec3 lightDir = normalize(light.position - fragPos);
@@ -239,7 +239,7 @@ vec3 qrk_shadeSpotLightCookTorranceGGXDeferred(vec3 albedo, float roughness,
 
   float spotlightIntensity = qrk_calcSpotLightIntensity(light, lightDir);
 
-  vec3 result = qrk_shadeCookTorranceGGXDeferred(albedo, roughness, metallic,
+  vec3 result = qrk_shadeCookTorranceGGXDeferred(albedo, u_roughness, u_metallic,
                                                  light.diffuse, light.specular,
                                                  lightDir, viewDir, normal);
   // Apply attenuation and intensity.
@@ -247,12 +247,12 @@ vec3 qrk_shadeSpotLightCookTorranceGGXDeferred(vec3 albedo, float roughness,
 }
 
 /** Calculate shading for a spot light source. */
-vec3 qrk_shadeSpotLightCookTorranceGGX(QrkMaterial material, QrkSpotLight light,
+vec3 qrk_shadeSpotLightCookTorranceGGX(QrkMaterial u_material, QrkSpotLight light,
                                        vec3 fragPos, vec3 normal,
                                        vec2 texCoords) {
-  vec3 albedo = qrk_extractAlbedo(material, texCoords);
-  float roughness = qrk_extractRoughness(material, texCoords);
-  float metallic = qrk_extractMetallic(material, texCoords);
-  return qrk_shadeSpotLightCookTorranceGGXDeferred(albedo, roughness, metallic,
+  vec3 albedo = qrk_extractAlbedo(u_material, texCoords);
+  float u_roughness = qrk_extractRoughness(u_material, texCoords);
+  float u_metallic = qrk_extractMetallic(u_material, texCoords);
+  return qrk_shadeSpotLightCookTorranceGGXDeferred(albedo, u_roughness, u_metallic,
                                                    light, fragPos, normal);
 }

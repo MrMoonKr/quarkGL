@@ -472,7 +472,7 @@ void renderImGuiUI( ModelRenderOptions& opts, UIContext ctx ) {
         imguiFloatSlider( "Sensitivity", &opts.sensitivity, 0.01, 1.0, nullptr,
                           Scale::LOG );
         imguiFloatSlider( "FoV", &opts.fov, qrk::MIN_FOV, qrk::MAX_FOV,
-                          "%.1f°" );
+                          "%.1f째" );
         if ( imguiFloatSlider( "Near plane", &opts.near, 0.01, 1000.0, nullptr,
                                Scale::LOG ) ) {
             if ( opts.near > opts.far ) {
@@ -904,7 +904,7 @@ int main( int argc, char** argv ) {
                     case GBufferVis::DISABLED:
                         break;
                 };
-                gBufferVisShader.setInt( "gBufferVis",
+                gBufferVisShader.setInt( "u_gBufferVis",
                                          static_cast<int>( opts.gBufferVis ) );
                 screenQuad.draw( gBufferVisShader );
             }
@@ -952,23 +952,23 @@ int main( int argc, char** argv ) {
 
             // TODO: Set up environment mapping with the skybox.
             lightingPassShader.updateUniforms();
-            lightingPassShader.setBool( "shadowMapping", opts.shadowMapping );
-            lightingPassShader.setFloat( "shadowBiasMin", opts.shadowBiasMin );
-            lightingPassShader.setFloat( "shadowBiasMax", opts.shadowBiasMax );
-            lightingPassShader.setBool( "useIBL", opts.useIBL );
-            lightingPassShader.setBool( "ssao", opts.ssao );
-            lightingPassShader.setInt( "lightingModel",
+            lightingPassShader.setBool( "u_shadowMapping", opts.shadowMapping );
+            lightingPassShader.setFloat( "u_shadowBiasMin", opts.shadowBiasMin );
+            lightingPassShader.setFloat( "u_shadowBiasMax", opts.shadowBiasMax );
+            lightingPassShader.setBool( "u_useIBL", opts.useIBL );
+            lightingPassShader.setBool( "u_ssao", opts.ssao );
+            lightingPassShader.setInt( "u_lightingModel",
                                        static_cast<int>( opts.lightingModel ) );
             // TODO: Pull this out into a material class.
-            lightingPassShader.setVec3( "ambient", opts.ambientColor );
-            lightingPassShader.setFloat( "shininess", opts.shininess );
-            lightingPassShader.setFloat( "emissionIntensity",
+            lightingPassShader.setVec3( "u_ambient", opts.ambientColor );
+            lightingPassShader.setFloat( "u_shininess", opts.shininess );
+            lightingPassShader.setFloat( "u_emissionIntensity",
                                          opts.emissionIntensity );
-            lightingPassShader.setFloat( "emissionAttenuation.constant",
+            lightingPassShader.setFloat( "u_emissionAttenuation.constant",
                                          opts.emissionAttenuation.x );
-            lightingPassShader.setFloat( "emissionAttenuation.linear",
+            lightingPassShader.setFloat( "u_emissionAttenuation.linear",
                                          opts.emissionAttenuation.y );
-            lightingPassShader.setFloat( "emissionAttenuation.quadratic",
+            lightingPassShader.setFloat( "u_emissionAttenuation.quadratic",
                                          opts.emissionAttenuation.z );
 
             screenQuad.unsetTexture();
@@ -1024,12 +1024,12 @@ int main( int argc, char** argv ) {
 
             // Draw to the final FB using the post process shader.
             postprocessShader.updateUniforms();
-            postprocessShader.setBool( "bloom", opts.bloom );
-            postprocessShader.setFloat( "bloomMix", opts.bloomMix );
-            postprocessShader.setInt( "toneMapping",
+            postprocessShader.setBool( "u_bloom", opts.bloom );
+            postprocessShader.setFloat( "u_bloomMix", opts.bloomMix );
+            postprocessShader.setInt( "u_toneMapping",
                                       static_cast<int>( opts.toneMapping ) );
-            postprocessShader.setBool( "gammaCorrect", opts.gammaCorrect );
-            postprocessShader.setFloat( "gamma",
+            postprocessShader.setBool( "u_gammaCorrect", opts.gammaCorrect );
+            postprocessShader.setFloat( "u_gamma",
                                         static_cast<int>( opts.gamma ) );
             screenQuad.setTexture( mainColorAttachment );
             screenQuad.draw( postprocessShader,

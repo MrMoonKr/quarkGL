@@ -60,11 +60,11 @@ int main() {
         glm::vec3( 0.2f ) ) );
 
     // TODO: Pull this out into a material class.
-    mainShader.setVec3( "material.ambient", glm::vec3( 0.1f ) );
-    mainShader.setFloat( "material.shininess", 32.0f );
-    mainShader.setFloat( "material.emissionAttenuation.constant", 1.0f );
-    mainShader.setFloat( "material.emissionAttenuation.linear", 0.09f );
-    mainShader.setFloat( "material.emissionAttenuation.quadratic", 0.032f );
+    mainShader.setVec3( "u_material.ambient", glm::vec3( 0.1f ) );
+    mainShader.setFloat( "u_material.shininess", 32.0f );
+    mainShader.setFloat( "u_material.emissionAttenuation.constant", 1.0f );
+    mainShader.setFloat( "u_material.emissionAttenuation.linear", 0.09f );
+    mainShader.setFloat( "u_material.emissionAttenuation.quadratic", 0.032f );
 
     auto textureRegistry = std::make_shared<qrk::TextureRegistry>();
     mainShader.addUniformSource( textureRegistry );
@@ -105,9 +105,9 @@ int main() {
         mainShader.updateUniforms();
         unsigned int textureUnit = textureRegistry->getNextTextureUnit();
         normalMap.bindToUnit( textureUnit );
-        mainShader.setInt( "normalMap", textureUnit );
-        mainShader.setBool( "useVertexNormals", useVertexNormals );
-        mainShader.setBool( "renderNormals", renderNormals );
+        mainShader.setInt( "u_normalMap", textureUnit );
+        mainShader.setBool( "u_useVertexNormals", useVertexNormals );
+        mainShader.setBool( "u_renderNormals", renderNormals );
         plane.draw( mainShader, textureRegistry.get() );
 
         // Draw light source.

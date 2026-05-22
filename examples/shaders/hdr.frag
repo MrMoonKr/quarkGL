@@ -5,22 +5,22 @@ in vec2 texCoords;
 
 out vec4 fragColor;
 
-uniform sampler2D screenTexture;
-uniform bool useHdr;
-uniform int toneMapTechnique;
-uniform float colorStrength = 1.0f;
+uniform sampler2D u_screenTexture;
+uniform bool u_useHdr;
+uniform int u_toneMapTechnique;
+uniform float u_colorStrength = 1.0f;
 
 void main() {
-  vec3 color = texture(screenTexture, texCoords).rgb;
+  vec3 color = texture(u_screenTexture, texCoords).rgb;
 
-  color *= colorStrength;
+  color *= u_colorStrength;
 
-  if (useHdr) {
-    if (toneMapTechnique == 0) {
+  if (u_useHdr) {
+    if (u_toneMapTechnique == 0) {
       color = qrk_toneMapReinhard(color);
-    } else if (toneMapTechnique == 1) {
+    } else if (u_toneMapTechnique == 1) {
       color = qrk_toneMapReinhardLuminance(color);
-    } else if (toneMapTechnique == 2) {
+    } else if (u_toneMapTechnique == 2) {
       color = qrk_toneMapAcesApprox(color);
     }
   }

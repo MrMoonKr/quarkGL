@@ -23,8 +23,8 @@ void SkyboxShader::deactivate() {
 }
 
 void SkyboxShader::setMat4( const char* name, const glm::mat4& matrix ) {
-    // Special case the "view" transform.
-    if ( strcmp( name, "view" ) == 0 ) {
+    // Special case the "u_view" transform.
+    if ( strcmp( name, "u_view" ) == 0 ) {
         // We drop the translation (by just converting to a mat3 and then back)
         // since the skybox needs to always follow the camera.
         Shader::setMat4( name, glm::mat4( glm::mat3( matrix ) ) );

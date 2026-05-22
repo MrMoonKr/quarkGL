@@ -27,7 +27,7 @@ glm::mat4 ShadowCamera::getProjectionTransform() {
 }
 
 void ShadowCamera::updateUniforms( Shader& shader ) {
-    shader.setMat4( "lightViewProjection",
+    shader.setMat4( "u_lightViewProjection",
                     getProjectionTransform() * getViewTransform() );
 }
 
@@ -46,7 +46,7 @@ unsigned int ShadowMap::bindTexture( unsigned int nextTextureUnit,
                                      Shader& shader ) {
     depthAttachment_.asTexture().bindToUnit( nextTextureUnit );
     // TODO: Make this more generic.
-    shader.setInt( "shadowMap", nextTextureUnit );
+    shader.setInt( "u_shadowMap", nextTextureUnit );
     return nextTextureUnit + 1;
 }
 

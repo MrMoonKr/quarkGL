@@ -8,39 +8,39 @@ in vec2 texCoords;
 
 out vec4 fragColor;
 
-uniform sampler2D gPositionAO;
-uniform sampler2D gNormalRoughness;
-uniform sampler2D gAlbedoMetallic;
-uniform sampler2D gEmission;
+uniform sampler2D u_gPositionAO;
+uniform sampler2D u_gNormalRoughness;
+uniform sampler2D u_gAlbedoMetallic;
+uniform sampler2D u_gEmission;
 uniform sampler2D qrk_ssao;
 
-uniform vec3 ambient;
-uniform float shininess;
-uniform QrkAttenuation emissionAttenuation;
+uniform vec3 u_ambient;
+uniform float u_shininess;
+uniform QrkAttenuation u_emissionAttenuation;
 
-uniform bool useSsao;
+uniform bool u_useSsao;
 
 void main() {
   // Extract G-Buffer for Blinn-Phong shading.
-  vec3 fragPos_viewSpace = texture(gPositionAO, texCoords).rgb;
-  vec3 fragNormal_viewSpace = texture(gNormalRoughness, texCoords).rgb;
-  vec3 fragAlbedo = texture(gAlbedoMetallic, texCoords).rgb;
-  vec3 fragSpecular = vec3(texture(gAlbedoMetallic, texCoords).a);
-  vec3 fragEmission = texture(gEmission, texCoords).rgb;
+  vec3 fragPos_viewSpace = texture(u_gPositionAO, texCoords).rgb;
+  vec3 fragNormal_viewSpace = texture(u_gNormalRoughness, texCoords).rgb;
+  vec3 fragAlbedo = texture(u_gAlbedoMetallic, texCoords).rgb;
+  vec3 fragSpecular = vec3(texture(u_gAlbedoMetallic, texCoords).a);
+  vec3 fragEmission = texture(u_gEmission, texCoords).rgb;
   float fragAmbientOcclusion = texture(qrk_ssao, texCoords).r;
 
-  if (!useSsao) {
+  if (!u_useSsao) {
     fragAmbientOcclusion = 1.0;
   }
 
   // Shade with normal lights.
   vec3 color = qrk_shadeAllLightsBlinnPhongDeferred(
-      fragAlbedo, fragSpecular, ambient, shininess, fragPos_viewSpace,
+      fragAlbedo, fragSpecular, u_ambient, u_shininess, fragPos_viewSpace,
       fragNormal_viewSpace, /*shadow=*/0.0, fragAmbientOcclusion);
 
   // Add emissions.
   color += qrk_shadeEmissionDeferred(fragEmission, fragPos_viewSpace,
-                                     emissionAttenuation);
+                                     u_emissionAttenuation);
 
   color = qrk_toneMapAcesApprox(color);
   color = qrk_gammaCorrect(color);
