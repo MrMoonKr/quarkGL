@@ -3,16 +3,16 @@
 
 // clang-format off
 // Must precede glfw/glad, to include OpenGL functions.
-#include <qrk/core.h>
+#include <quarkgl/core.h>
 // clang-format on
 
 namespace qrk {
 
 // RAII debugging group marker.
 class DebugGroup {
- public:
-  DebugGroup(const char* name);
-  ~DebugGroup();
+public:
+    DebugGroup( const char* name );
+    ~DebugGroup();
 };
 
 }  // namespace qrk

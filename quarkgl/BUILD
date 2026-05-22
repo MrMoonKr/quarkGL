@@ -3,7 +3,7 @@ package(default_visibility = ["//visibility:public"])
 cc_library(
     name = "quarkgl",
     hdrs = ["quarkgl.h"],
-    include_prefix = "qrk",
+    include_prefix = "quarkgl",
     deps = [
         ":aa",
         ":bloom",
@@ -43,7 +43,7 @@ cc_library(
     name = "core",
     srcs = ["core.cc"],
     hdrs = ["core.h"],
-    include_prefix = "qrk",
+    include_prefix = "quarkgl",
     deps = [
         "//third_party/glad",
         "@glfw",
@@ -54,7 +54,7 @@ cc_library(
     name = "debug",
     srcs = ["debug.cc"],
     hdrs = ["debug.h"],
-    include_prefix = "qrk",
+    include_prefix = "quarkgl",
     deps = [
         ":core",
     ],
@@ -64,7 +64,7 @@ cc_library(
     name = "aa",
     srcs = ["aa.cc"],
     hdrs = ["aa.h"],
-    include_prefix = "qrk",
+    include_prefix = "quarkgl",
     deps = [
         ":core",
         ":shader",
@@ -76,7 +76,7 @@ cc_library(
     name = "bloom",
     srcs = ["bloom.cc"],
     hdrs = ["bloom.h"],
-    include_prefix = "qrk",
+    include_prefix = "quarkgl",
     deps = [
         ":core",
         ":exceptions",
@@ -92,7 +92,7 @@ cc_library(
     name = "blur",
     srcs = ["blur.cc"],
     hdrs = ["blur.h"],
-    include_prefix = "qrk",
+    include_prefix = "quarkgl",
     deps = [
         ":core",
         ":exceptions",
@@ -107,7 +107,7 @@ cc_library(
     name = "camera",
     srcs = ["camera.cc"],
     hdrs = ["camera.h"],
-    include_prefix = "qrk",
+    include_prefix = "quarkgl",
     deps = [
         ":core",
         ":exceptions",
@@ -124,7 +124,7 @@ cc_library(
     name = "cubemap",
     srcs = ["cubemap.cc"],
     hdrs = ["cubemap.h"],
-    include_prefix = "qrk",
+    include_prefix = "quarkgl",
     deps = [
         ":core",
         ":exceptions",
@@ -140,7 +140,7 @@ cc_library(
     name = "deferred",
     srcs = ["deferred.cc"],
     hdrs = ["deferred.h"],
-    include_prefix = "qrk",
+    include_prefix = "quarkgl",
     deps = [
         ":exceptions",
         ":framebuffer",
@@ -155,7 +155,7 @@ cc_library(
     name = "exceptions",
     srcs = ["exceptions.cc"],
     hdrs = ["exceptions.h"],
-    include_prefix = "qrk",
+    include_prefix = "quarkgl",
     deps = [
         "//third_party/glad",
     ],
@@ -165,7 +165,7 @@ cc_library(
     name = "ibl",
     srcs = ["ibl.cc"],
     hdrs = ["ibl.h"],
-    include_prefix = "qrk",
+    include_prefix = "quarkgl",
     deps = [
         ":core",
         ":cubemap",
@@ -182,7 +182,7 @@ cc_library(
     name = "light",
     srcs = ["light.cc"],
     hdrs = ["light.h"],
-    include_prefix = "qrk",
+    include_prefix = "quarkgl",
     deps = [
         ":exceptions",
         ":shader",
@@ -194,7 +194,7 @@ cc_library(
     name = "mesh",
     srcs = ["mesh.cc"],
     hdrs = ["mesh.h"],
-    include_prefix = "qrk",
+    include_prefix = "quarkgl",
     deps = [
         ":shader",
         ":texture_map",
@@ -209,7 +209,7 @@ cc_library(
     name = "mesh_primitives",
     srcs = ["mesh_primitives.cc"],
     hdrs = ["mesh_primitives.h"],
-    include_prefix = "qrk",
+    include_prefix = "quarkgl",
     deps = [
         ":framebuffer",
         ":mesh",
@@ -222,7 +222,7 @@ cc_library(
     name = "texture",
     srcs = ["texture.cc"],
     hdrs = ["texture.h"],
-    include_prefix = "qrk",
+    include_prefix = "quarkgl",
     deps = [
         ":exceptions",
         ":screen",
@@ -245,7 +245,7 @@ cc_test(
 cc_library(
     name = "texture_map",
     hdrs = ["texture_map.h"],
-    include_prefix = "qrk",
+    include_prefix = "quarkgl",
     deps = [
         ":exceptions",
         ":texture",
@@ -258,7 +258,7 @@ cc_library(
     name = "texture_registry",
     srcs = ["texture_registry.cc"],
     hdrs = ["texture_registry.h"],
-    include_prefix = "qrk",
+    include_prefix = "quarkgl",
     deps = [
         ":exceptions",
         ":shader",
@@ -270,7 +270,7 @@ cc_library(
     name = "framebuffer",
     srcs = ["framebuffer.cc"],
     hdrs = ["framebuffer.h"],
-    include_prefix = "qrk",
+    include_prefix = "quarkgl",
     deps = [
         ":screen",
         ":window",
@@ -283,7 +283,7 @@ cc_library(
     name = "model",
     srcs = ["model.cc"],
     hdrs = ["model.h"],
-    include_prefix = "qrk",
+    include_prefix = "quarkgl",
     deps = [
         ":exceptions",
         ":mesh",
@@ -301,20 +301,20 @@ cc_library(
     name = "random",
     srcs = ["random.cc"],
     hdrs = ["random.h"],
-    include_prefix = "qrk",
+    include_prefix = "quarkgl",
 )
 
 cc_library(
     name = "screen",
     hdrs = ["screen.h"],
-    include_prefix = "qrk",
+    include_prefix = "quarkgl",
 )
 
 cc_library(
     name = "ssao",
     srcs = ["ssao.cc"],
     hdrs = ["ssao.h"],
-    include_prefix = "qrk",
+    include_prefix = "quarkgl",
     deps = [
         ":exceptions",
         ":framebuffer",
@@ -331,7 +331,7 @@ cc_library(
     name = "shader",
     srcs = ["shader.cc"],
     hdrs = ["shader.h"],
-    include_prefix = "qrk",
+    include_prefix = "quarkgl",
     deps = [
         ":core",
         ":exceptions",
@@ -348,14 +348,14 @@ cc_library(
     name = "shader_primitives",
     srcs = ["shader_primitives.cc"],
     hdrs = ["shader_primitives.h"],
-    include_prefix = "qrk",
+    include_prefix = "quarkgl",
     deps = [":shader"],
 )
 
 cc_library(
     name = "shader_defs",
     hdrs = ["shader_defs.h"],
-    include_prefix = "qrk",
+    include_prefix = "quarkgl",
 )
 
 cc_library(
@@ -368,7 +368,7 @@ cc_library(
         "shaders/**/*.frag",
         "shaders/**/*.geom",
     ]),
-    include_prefix = "qrk",
+    include_prefix = "quarkgl",
     deps = [
         ":exceptions",
         ":shader_defs",
@@ -380,7 +380,7 @@ cc_library(
     name = "shader_compiler",
     srcs = ["shader_compiler.cc"],
     hdrs = ["shader_compiler.h"],
-    include_prefix = "qrk",
+    include_prefix = "quarkgl",
     deps = [
         ":exceptions",
         ":shader_defs",
@@ -392,7 +392,7 @@ cc_library(
     name = "shadows",
     srcs = ["shadows.cc"],
     hdrs = ["shadows.h"],
-    include_prefix = "qrk",
+    include_prefix = "quarkgl",
     deps = [
         ":exceptions",
         ":framebuffer",
@@ -407,7 +407,7 @@ cc_library(
 cc_library(
     name = "utils",
     hdrs = ["utils.h"],
-    include_prefix = "qrk",
+    include_prefix = "quarkgl",
     deps = [],
 )
 
@@ -415,7 +415,7 @@ cc_library(
     name = "vertex_array",
     srcs = ["vertex_array.cc"],
     hdrs = ["vertex_array.h"],
-    include_prefix = "qrk",
+    include_prefix = "quarkgl",
     deps = [
         "//third_party/glad",
     ],
@@ -425,7 +425,7 @@ cc_library(
     name = "window",
     srcs = ["window.cc"],
     hdrs = ["window.h"],
-    include_prefix = "qrk",
+    include_prefix = "quarkgl",
     deps = [
         ":camera",
         ":core",

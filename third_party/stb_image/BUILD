@@ -4,6 +4,6 @@ cc_library(
     name = "stb_image",
     srcs = ["stb_image.cc"],
     hdrs = ["stb_image.h"],
-    include_prefix = "stb",
+    include_prefix = "stb_image",
     visibility = ["//visibility:public"],
 )

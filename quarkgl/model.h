@@ -3,10 +3,10 @@
 
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
-#include <qrk/exceptions.h>
-#include <qrk/mesh.h>
-#include <qrk/shader.h>
-#include <qrk/texture_map.h>
+#include <quarkgl/exceptions.h>
+#include <quarkgl/mesh.h>
+#include <quarkgl/shader.h>
+#include <quarkgl/texture_map.h>
 
 #include <glm/glm.hpp>
 #include <string>
@@ -15,28 +15,28 @@
 
 namespace qrk {
 class ModelLoaderException : public QuarkException {
-  using QuarkException::QuarkException;
+    using QuarkException::QuarkException;
 };
 
 struct ModelVertex {
-  glm::vec3 position;
-  glm::vec3 normal;
-  glm::vec3 tangent;
-  glm::vec2 texCoords;
+    glm::vec3 position;
+    glm::vec3 normal;
+    glm::vec3 tangent;
+    glm::vec2 texCoords;
 };
 
 class ModelMesh : public Mesh {
- public:
-  ModelMesh(const std::vector<ModelVertex>& vertices,
-            const std::vector<unsigned int>& indices,
-            const std::vector<TextureMap>& textureMaps,
-            unsigned int instanceCount = 0);
+public:
+    ModelMesh( const std::vector<ModelVertex>& vertices,
+               const std::vector<unsigned int>& indices,
+               const std::vector<TextureMap>& textureMaps,
+               unsigned int instanceCount = 0 );
 
-  virtual ~ModelMesh() = default;
+    virtual ~ModelMesh() = default;
 
- private:
-  void initializeVertexAttributes() override;
-  std::vector<ModelVertex> vertices_;
+private:
+    void initializeVertexAttributes() override;
+    std::vector<ModelVertex> vertices_;
 };
 
 constexpr auto DEFAULT_LOAD_FLAGS =
@@ -54,25 +54,28 @@ constexpr auto DEFAULT_LOAD_FLAGS =
     aiProcess_SortByPType;
 
 class Model : public Renderable {
- public:
-  explicit Model(const char* path, unsigned int instanceCount = 0);
-  virtual ~Model() = default;
-  void loadInstanceModels(const std::vector<glm::mat4>& models);
-  void loadInstanceModels(const glm::mat4* models, unsigned int size);
-  void drawWithTransform(const glm::mat4& transform, Shader& shader,
-                         TextureRegistry* textureRegistry = nullptr) override;
+public:
+    explicit Model( const char* path, unsigned int instanceCount = 0 );
+    virtual ~Model() = default;
+    void loadInstanceModels( const std::vector<glm::mat4>& models );
+    void loadInstanceModels( const glm::mat4* models, unsigned int size );
+    void drawWithTransform(
+        const glm::mat4& transform, Shader& shader,
+        TextureRegistry* textureRegistry = nullptr ) override;
 
- private:
-  void loadModel(std::string path);
-  void processNode(RenderableNode& target, aiNode* node, const aiScene* scene);
-  std::unique_ptr<ModelMesh> processMesh(aiMesh* mesh, const aiScene* scene);
-  std::vector<TextureMap> loadMaterialTextureMaps(aiMaterial* material,
-                                                  TextureMapType type);
+private:
+    void loadModel( std::string path );
+    void processNode( RenderableNode& target, aiNode* node,
+                      const aiScene* scene );
+    std::unique_ptr<ModelMesh> processMesh( aiMesh* mesh,
+                                            const aiScene* scene );
+    std::vector<TextureMap> loadMaterialTextureMaps( aiMaterial* material,
+                                                     TextureMapType type );
 
-  unsigned int instanceCount_;
-  RenderableNode rootNode_;
-  std::string directory_;
-  std::unordered_map<std::string, TextureMap> loadedTextureMaps_;
+    unsigned int instanceCount_;
+    RenderableNode rootNode_;
+    std::string directory_;
+    std::unordered_map<std::string, TextureMap> loadedTextureMaps_;
 };
 
 }  // namespace qrk

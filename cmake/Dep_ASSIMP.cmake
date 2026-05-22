@@ -31,6 +31,6 @@ set_target_properties(
     PROPERTIES
         IMPORTED_CONFIGURATIONS DEBUG
         IMPORTED_LOCATION_DEBUG "${assimp_lib_debug}"
-        INTERFACE_INCLUDE_DIRECTORIES "${QUARKGL_GENERATED_INCLUDE_DIR};${CMAKE_SOURCE_DIR}/third_party/assimp/include"
+        INTERFACE_INCLUDE_DIRECTORIES "${QUARKGL_THIRD_PARTY_INCLUDE_DIR};${CMAKE_SOURCE_DIR}/third_party/assimp/include"
         INTERFACE_LINK_LIBRARIES "assimp_zlib"
     )

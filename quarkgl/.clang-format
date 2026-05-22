@@ -1,6 +1,15 @@
----
 BasedOnStyle: Google
----
 Language: Cpp
-DerivePointerAlignment: false
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+NamespaceIndentation: None
+AccessModifierOffset: -4
+IndentAccessModifiers: false
 PointerAlignment: Left
+SortIncludes: false
+SpaceInEmptyParentheses: false
+SpacesInCStyleCastParentheses: true
+SpacesInParentheses: true
+SpacesInSquareBrackets: true
+KeepEmptyLinesAtTheStartOfBlocks: true

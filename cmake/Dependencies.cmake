@@ -23,37 +23,17 @@ function(dep_declare_fetchcontent name git_repository git_tag source_dir binary_
     )
 endfunction()
 
-function(quarkgl_prepare_generated_include_tree out_dir)
+function(quarkgl_prepare_generated_third_party_headers out_dir)
     set(generated_include_dir "${CMAKE_BINARY_DIR}/generated_include")
 
     file(MAKE_DIRECTORY
         "${generated_include_dir}/KHR"
-        "${generated_include_dir}/qrk"
-        "${generated_include_dir}/stb"
         "${generated_include_dir}/assimp"
     )
-
-    file(GLOB quarkgl_public_headers CONFIGURE_DEPENDS
-        "${CMAKE_SOURCE_DIR}/quarkgl/*.h"
-    )
-    foreach(header IN LISTS quarkgl_public_headers)
-        get_filename_component(header_name "${header}" NAME)
-        configure_file(
-            "${header}"
-            "${generated_include_dir}/qrk/${header_name}"
-            COPYONLY
-        )
-    endforeach()
 
     configure_file(
         "${CMAKE_SOURCE_DIR}/third_party/khrplatform/khrplatform.h"
         "${generated_include_dir}/KHR/khrplatform.h"
-        COPYONLY
-    )
-
-    configure_file(
-        "${CMAKE_SOURCE_DIR}/third_party/stb_image/stb_image.h"
-        "${generated_include_dir}/stb/stb_image.h"
         COPYONLY
     )
 

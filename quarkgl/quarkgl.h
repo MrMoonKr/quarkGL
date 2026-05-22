@@ -3,37 +3,37 @@
 
 // clang-format off
 // Must be included first.
-#include <qrk/core.h>
+#include <quarkgl/core.h>
 // clang-format on
 
-#include <qrk/aa.h>
-#include <qrk/bloom.h>
-#include <qrk/blur.h>
-#include <qrk/camera.h>
-#include <qrk/cubemap.h>
-#include <qrk/debug.h>
-#include <qrk/deferred.h>
-#include <qrk/exceptions.h>
-#include <qrk/framebuffer.h>
-#include <qrk/ibl.h>
-#include <qrk/light.h>
-#include <qrk/mesh.h>
-#include <qrk/mesh_primitives.h>
-#include <qrk/model.h>
-#include <qrk/random.h>
-#include <qrk/screen.h>
-#include <qrk/shader.h>
-#include <qrk/shader_compiler.h>
-#include <qrk/shader_defs.h>
-#include <qrk/shader_loader.h>
-#include <qrk/shader_primitives.h>
-#include <qrk/shadows.h>
-#include <qrk/ssao.h>
-#include <qrk/texture.h>
-#include <qrk/texture_map.h>
-#include <qrk/texture_registry.h>
-#include <qrk/utils.h>
-#include <qrk/vertex_array.h>
-#include <qrk/window.h>
+#include <quarkgl/aa.h>
+#include <quarkgl/bloom.h>
+#include <quarkgl/blur.h>
+#include <quarkgl/camera.h>
+#include <quarkgl/cubemap.h>
+#include <quarkgl/debug.h>
+#include <quarkgl/deferred.h>
+#include <quarkgl/exceptions.h>
+#include <quarkgl/framebuffer.h>
+#include <quarkgl/ibl.h>
+#include <quarkgl/light.h>
+#include <quarkgl/mesh.h>
+#include <quarkgl/mesh_primitives.h>
+#include <quarkgl/model.h>
+#include <quarkgl/random.h>
+#include <quarkgl/screen.h>
+#include <quarkgl/shader.h>
+#include <quarkgl/shader_compiler.h>
+#include <quarkgl/shader_defs.h>
+#include <quarkgl/shader_loader.h>
+#include <quarkgl/shader_primitives.h>
+#include <quarkgl/shadows.h>
+#include <quarkgl/ssao.h>
+#include <quarkgl/texture.h>
+#include <quarkgl/texture_map.h>
+#include <quarkgl/texture_registry.h>
+#include <quarkgl/utils.h>
+#include <quarkgl/vertex_array.h>
+#include <quarkgl/window.h>
 
 #endif

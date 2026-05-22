@@ -1,7 +1,7 @@
 #ifndef QUARKGL_SHADER_PRIMITIVES_H_
 #define QUARKGL_SHADER_PRIMITIVES_H_
 
-#include <qrk/shader.h>
+#include <quarkgl/shader.h>
 
 #include <glm/glm.hpp>
 
@@ -11,34 +11,34 @@ namespace qrk {
 // the skybox behind all other geometry.
 // TODO: Move this to a skybox header.
 class SkyboxShader : public Shader {
- public:
-  SkyboxShader();
+public:
+    SkyboxShader();
 
-  virtual void activate() override;
-  virtual void deactivate() override;
+    virtual void activate() override;
+    virtual void deactivate() override;
 
-  virtual void setMat4(const char* name, const glm::mat4& matrix) override;
+    virtual void setMat4( const char* name, const glm::mat4& matrix ) override;
 };
 
 class ScreenShader : public Shader {
- public:
-  ScreenShader();
-  explicit ScreenShader(const ShaderSource& fragmentSource);
+public:
+    ScreenShader();
+    explicit ScreenShader( const ShaderSource& fragmentSource );
 };
 
 class ScreenLodShader : public ScreenShader {
- public:
-  ScreenLodShader();
+public:
+    ScreenLodShader();
 
-  void setMipLevel(int mipLevel) {
-    setFloat("lod", static_cast<float>(mipLevel));
-  }
+    void setMipLevel( int mipLevel ) {
+        setFloat( "lod", static_cast<float>( mipLevel ) );
+    }
 };
 
 // TODO: Move this to the shadows header.
 class ShadowMapShader : public Shader {
- public:
-  ShadowMapShader();
+public:
+    ShadowMapShader();
 };
 
 }  // namespace qrk

@@ -11,7 +11,6 @@ target_include_directories(
     stb_image
     PUBLIC
         "${CMAKE_SOURCE_DIR}/third_party"
-        "${QUARKGL_GENERATED_INCLUDE_DIR}"
 )
 
 quarkgl_apply_common_target_settings(stb_image)

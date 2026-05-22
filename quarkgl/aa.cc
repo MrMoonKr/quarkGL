@@ -1,8 +1,8 @@
-#include <qrk/aa.h>
+#include "aa.h"
 
 namespace qrk {
 
 FXAAShader::FXAAShader()
-    : ScreenShader(ShaderPath("quarkgl/shaders/builtin/fxaa.frag")) {}
+    : ScreenShader( ShaderPath( "quarkgl/shaders/builtin/fxaa.frag" ) ) {}
 
 }  // namespace qrk

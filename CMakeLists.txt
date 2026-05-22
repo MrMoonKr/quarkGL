@@ -78,7 +78,9 @@ endfunction()
 
 include(cmake/Dependencies.cmake)
 
-quarkgl_prepare_generated_include_tree(QUARKGL_GENERATED_INCLUDE_DIR)
+quarkgl_prepare_generated_third_party_headers(
+    QUARKGL_THIRD_PARTY_INCLUDE_DIR
+)
 
 include(cmake/Dep_GLFW.cmake)
 include(cmake/Dep_GLAD.cmake)

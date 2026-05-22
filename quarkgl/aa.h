@@ -1,14 +1,14 @@
 #ifndef QUARKGL_AA_H_
 #define QUARKGL_AA_H_
 
-#include <qrk/shader.h>
-#include <qrk/shader_primitives.h>
+#include <quarkgl/shader.h>
+#include <quarkgl/shader_primitives.h>
 
 namespace qrk {
 
 class FXAAShader : public ScreenShader {
- public:
-  FXAAShader();
+public:
+    FXAAShader();
 };
 
 }  // namespace qrk

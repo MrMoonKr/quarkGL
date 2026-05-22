@@ -1,6 +1,6 @@
 // clang-format off
 // Must precede glfw/glad, to include OpenGL functions.
-#include <qrk/quarkgl.h>
+#include <quarkgl/quarkgl.h>
 // clang-format on
 
 #include <cstdint>
@@ -9,7 +9,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#if defined(_WIN32)
+#if defined( _WIN32 )
 #define NOMINMAX
 #include <windows.h>
 #ifdef near
@@ -28,55 +28,57 @@
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 
-ABSL_FLAG(std::string, model, "", "Path to a model file");
+ABSL_FLAG( std::string, model, "", "Path to a model file" );
 
 namespace {
 constexpr float kBaseImGuiFontSize = 13.0f;
 
 struct ImGuiScaleState {
-  float dpiScale = 0.0f;
-  ImGuiStyle baseStyle;
+    float dpiScale = 0.0f;
+    ImGuiStyle baseStyle;
 };
 
 void enableHighDpiSupport() {
-#if defined(_WIN32)
-  if (!SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2)) {
-    SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE);
-  }
+#if defined( _WIN32 )
+    if ( !SetProcessDpiAwarenessContext(
+             DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2 ) ) {
+        SetProcessDpiAwarenessContext(
+            DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE );
+    }
 #endif
 }
 
-float getWindowContentScale(GLFWwindow* window) {
-  float xScale = 1.0f;
-  float yScale = 1.0f;
-  glfwGetWindowContentScale(window, &xScale, &yScale);
-  return std::max(std::max(xScale, yScale), 1.0f);
+float getWindowContentScale( GLFWwindow* window ) {
+    float xScale = 1.0f;
+    float yScale = 1.0f;
+    glfwGetWindowContentScale( window, &xScale, &yScale );
+    return std::max( std::max( xScale, yScale ), 1.0f );
 }
 
-void rebuildImGuiFontAtlas(float dpiScale) {
-  ImGuiIO& io = ImGui::GetIO();
-  io.Fonts->Clear();
+void rebuildImGuiFontAtlas( float dpiScale ) {
+    ImGuiIO& io = ImGui::GetIO();
+    io.Fonts->Clear();
 
-  ImFontConfig fontConfig;
-  fontConfig.SizePixels = kBaseImGuiFontSize * dpiScale;
-  io.Fonts->AddFontDefault(&fontConfig);
+    ImFontConfig fontConfig;
+    fontConfig.SizePixels = kBaseImGuiFontSize * dpiScale;
+    io.Fonts->AddFontDefault( &fontConfig );
 
-  ImGui_ImplOpenGL3_DestroyFontsTexture();
-  ImGui_ImplOpenGL3_CreateFontsTexture();
+    ImGui_ImplOpenGL3_DestroyFontsTexture();
+    ImGui_ImplOpenGL3_CreateFontsTexture();
 }
 
-void applyImGuiScale(GLFWwindow* window, ImGuiScaleState& state) {
-  const float dpiScale = getWindowContentScale(window);
-  if (std::abs(dpiScale - state.dpiScale) < 0.01f) return;
+void applyImGuiScale( GLFWwindow* window, ImGuiScaleState& state ) {
+    const float dpiScale = getWindowContentScale( window );
+    if ( std::abs( dpiScale - state.dpiScale ) < 0.01f ) return;
 
-  state.dpiScale = dpiScale;
+    state.dpiScale = dpiScale;
 
-  ImGuiStyle& style = ImGui::GetStyle();
-  style = state.baseStyle;
-  style.ScaleAllSizes(dpiScale);
+    ImGuiStyle& style = ImGui::GetStyle();
+    style = state.baseStyle;
+    style.ScaleAllSizes( dpiScale );
 
-  ImGui::GetIO().FontGlobalScale = 1.0f;
-  rebuildImGuiFontAtlas(dpiScale);
+    ImGui::GetIO().FontGlobalScale = 1.0f;
+    rebuildImGuiFontAtlas( dpiScale );
 }
 }  // namespace
 
@@ -95,423 +97,438 @@ void main() { fragColor = vec4(1.0, 1.0, 0.0, 1.0); }
 )SHADER";
 
 enum class CameraControlType {
-  FLY = 0,
-  ORBIT,
+    FLY = 0,
+    ORBIT,
 };
 
 enum class LightingModel {
-  BLINN_PHONG = 0,
-  COOK_TORRANCE_GGX,
+    BLINN_PHONG = 0,
+    COOK_TORRANCE_GGX,
 };
 
 enum class SkyboxImage {
-  ALEXS_APT = 0,
-  FROZEN_WATERFALL,
-  KLOPPENHEIM,
-  MILKYWAY,
-  MON_VALLEY,
-  UENO_SHRINE,
-  WINTER_FOREST,
+    ALEXS_APT = 0,
+    FROZEN_WATERFALL,
+    KLOPPENHEIM,
+    MILKYWAY,
+    MON_VALLEY,
+    UENO_SHRINE,
+    WINTER_FOREST,
 };
 
 enum class GBufferVis {
-  DISABLED = 0,
-  POSITIONS,
-  AO,
-  NORMALS,
-  ROUGHNESS,
-  ALBEDO,
-  METALLIC,
-  EMISSION,
+    DISABLED = 0,
+    POSITIONS,
+    AO,
+    NORMALS,
+    ROUGHNESS,
+    ALBEDO,
+    METALLIC,
+    EMISSION,
 };
 
 enum class ToneMapping {
-  NONE = 0,
-  REINHARD,
-  REINHARD_LUMINANCE,
-  ACES_APPROX,
-  AMD,
+    NONE = 0,
+    REINHARD,
+    REINHARD_LUMINANCE,
+    ACES_APPROX,
+    AMD,
 };
 
 // Options for the model render UI. The defaults here are used at startup.
 struct ModelRenderOptions {
-  // Model.
-  glm::quat modelRotation = glm::identity<glm::quat>();
-  float modelScale = 1.0f;
+    // Model.
+    glm::quat modelRotation = glm::identity<glm::quat>();
+    float modelScale = 1.0f;
 
-  // Rendering.
-  LightingModel lightingModel = LightingModel::COOK_TORRANCE_GGX;
+    // Rendering.
+    LightingModel lightingModel = LightingModel::COOK_TORRANCE_GGX;
 
-  glm::vec3 directionalDiffuse = glm::vec3(0.5f);
-  glm::vec3 directionalSpecular = glm::vec3(0.5f);
-  float directionalIntensity = 10.0f;
-  glm::vec3 directionalDirection =
-      glm::normalize(glm::vec3(-0.2f, -1.0f, -0.3f));
+    glm::vec3 directionalDiffuse = glm::vec3( 0.5f );
+    glm::vec3 directionalSpecular = glm::vec3( 0.5f );
+    float directionalIntensity = 10.0f;
+    glm::vec3 directionalDirection =
+        glm::normalize( glm::vec3( -0.2f, -1.0f, -0.3f ) );
 
-  bool shadowMapping = true;
-  float shadowCameraCuboidExtents = 2.0f;
-  float shadowCameraNear = 0.1f;
-  float shadowCameraFar = 15.0f;
-  float shadowCameraDistance = 5.0f;
-  float shadowBiasMin = 0.0001;
-  float shadowBiasMax = 0.001;
+    bool shadowMapping = true;
+    float shadowCameraCuboidExtents = 2.0f;
+    float shadowCameraNear = 0.1f;
+    float shadowCameraFar = 15.0f;
+    float shadowCameraDistance = 5.0f;
+    float shadowBiasMin = 0.0001;
+    float shadowBiasMax = 0.001;
 
-  SkyboxImage skyboxImage = SkyboxImage::KLOPPENHEIM;
+    SkyboxImage skyboxImage = SkyboxImage::KLOPPENHEIM;
 
-  bool useIBL = true;
-  glm::vec3 ambientColor = glm::vec3(0.1f);
-  bool ssao = true;
-  float ssaoRadius = 0.5f;
-  float ssaoBias = 0.025f;
-  float shininess = 32.0f;
-  float emissionIntensity = 5.0f;
-  glm::vec3 emissionAttenuation = glm::vec3(0, 0, 1.0f);
+    bool useIBL = true;
+    glm::vec3 ambientColor = glm::vec3( 0.1f );
+    bool ssao = true;
+    float ssaoRadius = 0.5f;
+    float ssaoBias = 0.025f;
+    float shininess = 32.0f;
+    float emissionIntensity = 5.0f;
+    glm::vec3 emissionAttenuation = glm::vec3( 0, 0, 1.0f );
 
-  bool bloom = true;
-  float bloomMix = 0.004;
-  ToneMapping toneMapping = ToneMapping::ACES_APPROX;
-  bool gammaCorrect = true;
-  float gamma = 2.2f;
+    bool bloom = true;
+    float bloomMix = 0.004;
+    ToneMapping toneMapping = ToneMapping::ACES_APPROX;
+    bool gammaCorrect = true;
+    float gamma = 2.2f;
 
-  bool fxaa = true;
+    bool fxaa = true;
 
-  // Camera.
-  CameraControlType cameraControlType = CameraControlType::ORBIT;
-  float speed = 0;
-  float sensitivity = 0;
-  float fov = 0;
-  float near = 0;
-  float far = 0;
-  bool captureMouse = false;
+    // Camera.
+    CameraControlType cameraControlType = CameraControlType::ORBIT;
+    float speed = 0;
+    float sensitivity = 0;
+    float fov = 0;
+    float near = 0;
+    float far = 0;
+    bool captureMouse = false;
 
-  // Debug.
-  GBufferVis gBufferVis = GBufferVis::DISABLED;
-  bool wireframe = false;
-  bool drawNormals = false;
+    // Debug.
+    GBufferVis gBufferVis = GBufferVis::DISABLED;
+    bool wireframe = false;
+    bool drawNormals = false;
 
-  // Performance.
-  const float* frameDeltas = nullptr;
-  int numFrameDeltas = 0;
-  int frameDeltasOffset = 0;
-  float avgFPS = 0;
-  bool enableVsync = true;
+    // Performance.
+    const float* frameDeltas = nullptr;
+    int numFrameDeltas = 0;
+    int frameDeltasOffset = 0;
+    float avgFPS = 0;
+    bool enableVsync = true;
 };
 
 // Helper to display a little (?) mark which shows a tooltip when hovered.
-static void imguiHelpMarker(const char* desc) {
-  ImGui::TextDisabled("(?)");
-  if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort)) {
-    ImGui::BeginTooltip();
-    ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
-    ImGui::TextUnformatted(desc);
-    ImGui::PopTextWrapPos();
-    ImGui::EndTooltip();
-  }
+static void imguiHelpMarker( const char* desc ) {
+    ImGui::TextDisabled( "(?)" );
+    if ( ImGui::IsItemHovered( ImGuiHoveredFlags_DelayShort ) ) {
+        ImGui::BeginTooltip();
+        ImGui::PushTextWrapPos( ImGui::GetFontSize() * 35.0f );
+        ImGui::TextUnformatted( desc );
+        ImGui::PopTextWrapPos();
+        ImGui::EndTooltip();
+    }
 }
 
 enum class Scale {
-  LINEAR = 0,
-  LOG,
+    LINEAR = 0,
+    LOG,
 };
 
 // Helper for a float slider value.
-static bool imguiFloatSlider(const char* desc, float* value, float min,
-                             float max, const char* fmt = nullptr,
-                             Scale scale = Scale::LINEAR) {
-  ImGuiSliderFlags flags = ImGuiSliderFlags_None;
-  if (scale == Scale::LOG) {
-    flags = ImGuiSliderFlags_Logarithmic;
-  }
-  return ImGui::SliderScalar(desc, ImGuiDataType_Float, value, &min, &max, fmt,
-                             flags);
+static bool imguiFloatSlider( const char* desc, float* value, float min,
+                              float max, const char* fmt = nullptr,
+                              Scale scale = Scale::LINEAR ) {
+    ImGuiSliderFlags flags = ImGuiSliderFlags_None;
+    if ( scale == Scale::LOG ) {
+        flags = ImGuiSliderFlags_Logarithmic;
+    }
+    return ImGui::SliderScalar( desc, ImGuiDataType_Float, value, &min, &max,
+                                fmt, flags );
 }
 
 // Helper for an image control.
-static void imguiImage(const qrk::Texture& texture, glm::vec2 size) {
-  ImTextureID texID =
-      reinterpret_cast<void*>(static_cast<intptr_t>(texture.getId()));
-  // Flip the image.
-  ImGui::Image(texID, size, /*uv0=*/glm::vec2(0.0f, 1.0f),
-               /*uv1=*/glm::vec2(1.0f, 0.0f));
+static void imguiImage( const qrk::Texture& texture, glm::vec2 size ) {
+    ImTextureID texID =
+        reinterpret_cast<void*>( static_cast<intptr_t>( texture.getId() ) );
+    // Flip the image.
+    ImGui::Image( texID, size, /*uv0=*/glm::vec2( 0.0f, 1.0f ),
+                  /*uv1=*/glm::vec2( 1.0f, 0.0f ) );
 }
 
 // Non-normative context for UI rendering. Used for accessing renderer info.
 struct UIContext {
-  UIContext(qrk::Camera& cameraIn, qrk::ShadowMap& shadowMapIn,
-            qrk::SsaoBuffer& ssaoBufferIn)
-      : camera(cameraIn),
-        shadowMap(shadowMapIn),
-        ssaoBuffer(ssaoBufferIn) {}
+    UIContext( qrk::Camera& cameraIn, qrk::ShadowMap& shadowMapIn,
+               qrk::SsaoBuffer& ssaoBufferIn )
+        : camera( cameraIn ),
+          shadowMap( shadowMapIn ),
+          ssaoBuffer( ssaoBufferIn ) {}
 
-  qrk::Camera& camera;
-  qrk::ShadowMap& shadowMap;
-  qrk::SsaoBuffer& ssaoBuffer;
+    qrk::Camera& camera;
+    qrk::ShadowMap& shadowMap;
+    qrk::SsaoBuffer& ssaoBuffer;
 };
 
 // Called during game loop.
-void renderImGuiUI(ModelRenderOptions& opts, UIContext ctx) {
-  // ImGui::ShowDemoWindow();
+void renderImGuiUI( ModelRenderOptions& opts, UIContext ctx ) {
+    // ImGui::ShowDemoWindow();
 
-  ImGui::Begin("Model Render");
+    ImGui::Begin( "Model Render" );
 
-  const float uiScale = ImGui::GetFontSize() / kBaseImGuiFontSize;
-  const float imageBaseSize = 160.0f * uiScale;
+    const float uiScale = ImGui::GetFontSize() / kBaseImGuiFontSize;
+    const float imageBaseSize = 160.0f * uiScale;
 
-  if (ImGui::CollapsingHeader("Model", ImGuiTreeNodeFlags_DefaultOpen)) {
-    // Perform some shenanigans so that the gizmo rotates along with the
-    // camera while still representing the same model rotation.
-    glm::quat rotViewSpace =
-        glm::quat_cast(ctx.camera.getViewTransform()) * opts.modelRotation;
-    ImGui::gizmo3D("Model rotation", rotViewSpace, imageBaseSize);
-    opts.modelRotation =
-        glm::quat_cast(glm::inverse(ctx.camera.getViewTransform())) *
-        glm::normalize(rotViewSpace);
+    if ( ImGui::CollapsingHeader( "Model", ImGuiTreeNodeFlags_DefaultOpen ) ) {
+        // Perform some shenanigans so that the gizmo rotates along with the
+        // camera while still representing the same model rotation.
+        glm::quat rotViewSpace =
+            glm::quat_cast( ctx.camera.getViewTransform() ) *
+            opts.modelRotation;
+        ImGui::gizmo3D( "Model rotation", rotViewSpace, imageBaseSize );
+        opts.modelRotation =
+            glm::quat_cast( glm::inverse( ctx.camera.getViewTransform() ) ) *
+            glm::normalize( rotViewSpace );
 
-    ImGui::SameLine();
+        ImGui::SameLine();
 
-    // Perform some shenanigans so that the gizmo rotates along with the
-    // camera while still representing the same light dir..
-    glm::vec3 dirViewSpace =
-        glm::vec3(ctx.camera.getViewTransform() *
-                  glm::vec4(opts.directionalDirection, 0.0f));
-    ImGui::gizmo3D("Light dir", dirViewSpace, imageBaseSize);
-    opts.directionalDirection =
-        glm::vec3(glm::inverse(ctx.camera.getViewTransform()) *
-                  glm::vec4(glm::normalize(dirViewSpace), 0.0f));
-    ImGui::SliderFloat3("Light dir",
-                        reinterpret_cast<float*>(&opts.directionalDirection),
-                        -1.0f, 1.0f);
+        // Perform some shenanigans so that the gizmo rotates along with the
+        // camera while still representing the same light dir..
+        glm::vec3 dirViewSpace =
+            glm::vec3( ctx.camera.getViewTransform() *
+                       glm::vec4( opts.directionalDirection, 0.0f ) );
+        ImGui::gizmo3D( "Light dir", dirViewSpace, imageBaseSize );
+        opts.directionalDirection =
+            glm::vec3( glm::inverse( ctx.camera.getViewTransform() ) *
+                       glm::vec4( glm::normalize( dirViewSpace ), 0.0f ) );
+        ImGui::SliderFloat3(
+            "Light dir", reinterpret_cast<float*>( &opts.directionalDirection ),
+            -1.0f, 1.0f );
 
-    if (ImGui::Button("Reset rotation")) {
-      opts.modelRotation = glm::identity<glm::quat>();
+        if ( ImGui::Button( "Reset rotation" ) ) {
+            opts.modelRotation = glm::identity<glm::quat>();
+        }
+        imguiFloatSlider( "Model scale", &opts.modelScale, 0.0001f, 100.0f,
+                          "%.04f", Scale::LOG );
     }
-    imguiFloatSlider("Model scale", &opts.modelScale, 0.0001f, 100.0f, "%.04f",
-                     Scale::LOG);
-  }
-
-  ImGui::Separator();
-
-  // Create a child so that this section can scroll separately.
-  ImGui::BeginChild("MainOptions");
-
-  if (ImGui::CollapsingHeader("Rendering")) {
-    ImGui::Combo("Lighting model", reinterpret_cast<int*>(&opts.lightingModel),
-                 "Blinn-Phong\0Cook-Torrance GGX\0\0");
-    ImGui::SameLine();
-    imguiHelpMarker("Which lighting model to use for shading.");
 
     ImGui::Separator();
-    if (ImGui::TreeNode("Directional light")) {
-      static bool lockSpecular = true;
-      ImGui::ColorEdit3("Diffuse color",
-                        reinterpret_cast<float*>(&opts.directionalDiffuse),
-                        ImGuiColorEditFlags_Float | ImGuiColorEditFlags_HDR);
-      ImGui::BeginDisabled(lockSpecular);
-      ImGui::ColorEdit3("Specular color",
-                        reinterpret_cast<float*>(&opts.directionalSpecular),
-                        ImGuiColorEditFlags_Float | ImGuiColorEditFlags_HDR);
-      ImGui::EndDisabled();
-      ImGui::Checkbox("Lock specular", &lockSpecular);
-      ImGui::SameLine();
-      imguiHelpMarker(
-          "Whether to lock the specular light color to the diffuse. Usually "
-          "desired for PBR.");
-      if (lockSpecular) {
-        opts.directionalSpecular = opts.directionalDiffuse;
-      }
-      imguiFloatSlider("Intensity", &opts.directionalIntensity, 0.0f, 50.0f,
-                       nullptr, Scale::LINEAR);
 
-      ImGui::TreePop();
-    }
+    // Create a child so that this section can scroll separately.
+    ImGui::BeginChild( "MainOptions" );
 
-    if (ImGui::TreeNode("Emission lights")) {
-      imguiFloatSlider("Emission intensity", &opts.emissionIntensity, 0.0f,
-                       1000.0f, nullptr, Scale::LOG);
-      ImGui::DragFloat3("Emission attenuation",
-                        reinterpret_cast<float*>(&opts.emissionAttenuation),
-                        /*v_speed=*/0.01f, 0.0f, 10.0f);
-      ImGui::SameLine();
-      imguiHelpMarker(
-          "Constant, linear, and quadratic attenuation of emission lights.");
+    if ( ImGui::CollapsingHeader( "Rendering" ) ) {
+        ImGui::Combo( "Lighting model",
+                      reinterpret_cast<int*>( &opts.lightingModel ),
+                      "Blinn-Phong\0Cook-Torrance GGX\0\0" );
+        ImGui::SameLine();
+        imguiHelpMarker( "Which lighting model to use for shading." );
 
-      ImGui::TreePop();
-    }
+        ImGui::Separator();
+        if ( ImGui::TreeNode( "Directional light" ) ) {
+            static bool lockSpecular = true;
+            ImGui::ColorEdit3(
+                "Diffuse color",
+                reinterpret_cast<float*>( &opts.directionalDiffuse ),
+                ImGuiColorEditFlags_Float | ImGuiColorEditFlags_HDR );
+            ImGui::BeginDisabled( lockSpecular );
+            ImGui::ColorEdit3(
+                "Specular color",
+                reinterpret_cast<float*>( &opts.directionalSpecular ),
+                ImGuiColorEditFlags_Float | ImGuiColorEditFlags_HDR );
+            ImGui::EndDisabled();
+            ImGui::Checkbox( "Lock specular", &lockSpecular );
+            ImGui::SameLine();
+            imguiHelpMarker(
+                "Whether to lock the specular light color to the diffuse. "
+                "Usually "
+                "desired for PBR." );
+            if ( lockSpecular ) {
+                opts.directionalSpecular = opts.directionalDiffuse;
+            }
+            imguiFloatSlider( "Intensity", &opts.directionalIntensity, 0.0f,
+                              50.0f, nullptr, Scale::LINEAR );
 
-    if (ImGui::TreeNode("Shadows")) {
-      ImGui::Checkbox("Shadow mapping", &opts.shadowMapping);
-      ImGui::BeginDisabled(!opts.shadowMapping);
-      // Shadow map texture is a square, so extend both width/height by the
-      // aspect ratio.
-      imguiImage(ctx.shadowMap.getDepthTexture(),
-                 glm::vec2(imageBaseSize * ctx.camera.getAspectRatio(),
-                           imageBaseSize * ctx.camera.getAspectRatio()));
-      imguiFloatSlider("Cuboid extents", &opts.shadowCameraCuboidExtents, 0.1f,
-                       50.0f, nullptr, Scale::LOG);
-
-      if (imguiFloatSlider("Near plane", &opts.shadowCameraNear, 0.01, 1000.0,
-                           nullptr, Scale::LOG)) {
-        if (opts.shadowCameraNear > opts.shadowCameraFar) {
-          opts.shadowCameraFar = opts.shadowCameraNear;
+            ImGui::TreePop();
         }
-      }
-      if (imguiFloatSlider("Far plane", &opts.shadowCameraFar, 0.01, 1000.0,
-                           nullptr, Scale::LOG)) {
-        if (opts.shadowCameraFar < opts.shadowCameraNear) {
-          opts.shadowCameraNear = opts.shadowCameraFar;
+
+        if ( ImGui::TreeNode( "Emission lights" ) ) {
+            imguiFloatSlider( "Emission intensity", &opts.emissionIntensity,
+                              0.0f, 1000.0f, nullptr, Scale::LOG );
+            ImGui::DragFloat3(
+                "Emission attenuation",
+                reinterpret_cast<float*>( &opts.emissionAttenuation ),
+                /*v_speed=*/0.01f, 0.0f, 10.0f );
+            ImGui::SameLine();
+            imguiHelpMarker(
+                "Constant, linear, and quadratic attenuation of emission "
+                "lights." );
+
+            ImGui::TreePop();
         }
-      }
-      imguiFloatSlider("Distance from origin", &opts.shadowCameraDistance, 0.01,
-                       100.0f, nullptr, Scale::LOG);
-      if (imguiFloatSlider("Bias min", &opts.shadowBiasMin, 0.0001, 1.0,
-                           "%.04f", Scale::LOG)) {
-        if (opts.shadowBiasMin > opts.shadowBiasMax) {
-          opts.shadowBiasMax = opts.shadowBiasMin;
+
+        if ( ImGui::TreeNode( "Shadows" ) ) {
+            ImGui::Checkbox( "Shadow mapping", &opts.shadowMapping );
+            ImGui::BeginDisabled( !opts.shadowMapping );
+            // Shadow map texture is a square, so extend both width/height by
+            // the aspect ratio.
+            imguiImage(
+                ctx.shadowMap.getDepthTexture(),
+                glm::vec2( imageBaseSize * ctx.camera.getAspectRatio(),
+                           imageBaseSize * ctx.camera.getAspectRatio() ) );
+            imguiFloatSlider( "Cuboid extents", &opts.shadowCameraCuboidExtents,
+                              0.1f, 50.0f, nullptr, Scale::LOG );
+
+            if ( imguiFloatSlider( "Near plane", &opts.shadowCameraNear, 0.01,
+                                   1000.0, nullptr, Scale::LOG ) ) {
+                if ( opts.shadowCameraNear > opts.shadowCameraFar ) {
+                    opts.shadowCameraFar = opts.shadowCameraNear;
+                }
+            }
+            if ( imguiFloatSlider( "Far plane", &opts.shadowCameraFar, 0.01,
+                                   1000.0, nullptr, Scale::LOG ) ) {
+                if ( opts.shadowCameraFar < opts.shadowCameraNear ) {
+                    opts.shadowCameraNear = opts.shadowCameraFar;
+                }
+            }
+            imguiFloatSlider( "Distance from origin",
+                              &opts.shadowCameraDistance, 0.01, 100.0f, nullptr,
+                              Scale::LOG );
+            if ( imguiFloatSlider( "Bias min", &opts.shadowBiasMin, 0.0001, 1.0,
+                                   "%.04f", Scale::LOG ) ) {
+                if ( opts.shadowBiasMin > opts.shadowBiasMax ) {
+                    opts.shadowBiasMax = opts.shadowBiasMin;
+                }
+            }
+            if ( imguiFloatSlider( "Bias max", &opts.shadowBiasMax, 0.0001, 1.0,
+                                   "%.04f", Scale::LOG ) ) {
+                if ( opts.shadowBiasMax < opts.shadowBiasMin ) {
+                    opts.shadowBiasMin = opts.shadowBiasMax;
+                }
+            }
+
+            ImGui::EndDisabled();
+
+            ImGui::TreePop();
         }
-      }
-      if (imguiFloatSlider("Bias max", &opts.shadowBiasMax, 0.0001, 1.0,
-                           "%.04f", Scale::LOG)) {
-        if (opts.shadowBiasMax < opts.shadowBiasMin) {
-          opts.shadowBiasMin = opts.shadowBiasMax;
+
+        if ( ImGui::TreeNode( "Environment" ) ) {
+            ImGui::Combo(
+                "Skybox image", reinterpret_cast<int*>( &opts.skyboxImage ),
+                "Alex's apt\0Frozen waterfall\0Kloppenheim\0Milkyway\0Mon "
+                "Valley\0Ueno shrine\0Winter forest\0" );
+
+            ImGui::BeginDisabled( opts.lightingModel ==
+                                  LightingModel::BLINN_PHONG );
+            ImGui::Checkbox( "Use IBL", &opts.useIBL );
+            ImGui::EndDisabled();
+
+            ImGui::BeginDisabled( opts.lightingModel !=
+                                      LightingModel::BLINN_PHONG &&
+                                  opts.useIBL );
+            ImGui::ColorEdit3(
+                "Ambient color", reinterpret_cast<float*>( &opts.ambientColor ),
+                ImGuiColorEditFlags_Float | ImGuiColorEditFlags_HDR );
+            ImGui::SameLine();
+            imguiHelpMarker( "The color of the fixed ambient component." );
+            ImGui::EndDisabled();
+
+            ImGui::Checkbox( "SSAO", &opts.ssao );
+            ImGui::BeginDisabled( !opts.ssao );
+            imguiImage( ctx.ssaoBuffer.getSsaoTexture(),
+                        glm::vec2( imageBaseSize * ctx.camera.getAspectRatio(),
+                                   imageBaseSize ) );
+
+            imguiFloatSlider( "SSAO radius", &opts.ssaoRadius, 0.01, 5.0,
+                              "%.04f", Scale::LOG );
+            imguiFloatSlider( "SSAO bias", &opts.ssaoBias, 0.0001, 1.0, "%.04f",
+                              Scale::LOG );
+            ImGui::EndDisabled();
+
+            ImGui::BeginDisabled( opts.lightingModel !=
+                                  LightingModel::BLINN_PHONG );
+            imguiFloatSlider( "Shininess", &opts.shininess, 1.0f, 1000.0f,
+                              nullptr, Scale::LOG );
+            ImGui::SameLine();
+            imguiHelpMarker(
+                "Shininess of specular highlights. Only applies to Phong." );
+            ImGui::EndDisabled();
+
+            ImGui::TreePop();
         }
-      }
 
-      ImGui::EndDisabled();
+        if ( ImGui::TreeNode( "Post-processing" ) ) {
+            ImGui::Checkbox( "Bloom", &opts.bloom );
+            ImGui::BeginDisabled( !opts.bloom );
+            imguiFloatSlider( "Bloom mix", &opts.bloomMix, 0.001f, 1.0f,
+                              nullptr, Scale::LOG );
+            ImGui::EndDisabled();
 
-      ImGui::TreePop();
+            ImGui::Combo(
+                "Tone mapping", reinterpret_cast<int*>( &opts.toneMapping ),
+                "None\0Reinhard\0Reinhard luminance\0ACES (approx)\0AMD\0\0" );
+            ImGui::Checkbox( "Gamma correct", &opts.gammaCorrect );
+            ImGui::BeginDisabled( !opts.gammaCorrect );
+            imguiFloatSlider( "Gamma", &opts.gamma, 0.01f, 8.0f, nullptr,
+                              Scale::LOG );
+            ImGui::EndDisabled();
+
+            ImGui::Checkbox( "FXAA", &opts.fxaa );
+
+            ImGui::TreePop();
+        }
     }
 
-    if (ImGui::TreeNode("Environment")) {
-      ImGui::Combo("Skybox image", reinterpret_cast<int*>(&opts.skyboxImage),
-                   "Alex's apt\0Frozen waterfall\0Kloppenheim\0Milkyway\0Mon "
-                   "Valley\0Ueno shrine\0Winter forest\0");
+    if ( ImGui::CollapsingHeader( "Camera" ) ) {
+        ImGui::RadioButton( "Fly controls",
+                            reinterpret_cast<int*>( &opts.cameraControlType ),
+                            static_cast<int>( CameraControlType::FLY ) );
+        ImGui::SameLine();
+        ImGui::RadioButton( "Orbit controls",
+                            reinterpret_cast<int*>( &opts.cameraControlType ),
+                            static_cast<int>( CameraControlType::ORBIT ) );
 
-      ImGui::BeginDisabled(opts.lightingModel == LightingModel::BLINN_PHONG);
-      ImGui::Checkbox("Use IBL", &opts.useIBL);
-      ImGui::EndDisabled();
+        imguiFloatSlider( "Speed", &opts.speed, 0.1, 50.0 );
+        imguiFloatSlider( "Sensitivity", &opts.sensitivity, 0.01, 1.0, nullptr,
+                          Scale::LOG );
+        imguiFloatSlider( "FoV", &opts.fov, qrk::MIN_FOV, qrk::MAX_FOV,
+                          "%.1f°" );
+        if ( imguiFloatSlider( "Near plane", &opts.near, 0.01, 1000.0, nullptr,
+                               Scale::LOG ) ) {
+            if ( opts.near > opts.far ) {
+                opts.far = opts.near;
+            }
+        }
+        if ( imguiFloatSlider( "Far plane", &opts.far, 0.01, 1000.0, nullptr,
+                               Scale::LOG ) ) {
+            if ( opts.far < opts.near ) {
+                opts.near = opts.far;
+            }
+        }
 
-      ImGui::BeginDisabled(opts.lightingModel != LightingModel::BLINN_PHONG &&
-                           opts.useIBL);
-      ImGui::ColorEdit3("Ambient color",
-                        reinterpret_cast<float*>(&opts.ambientColor),
-                        ImGuiColorEditFlags_Float | ImGuiColorEditFlags_HDR);
-      ImGui::SameLine();
-      imguiHelpMarker("The color of the fixed ambient component.");
-      ImGui::EndDisabled();
-
-      ImGui::Checkbox("SSAO", &opts.ssao);
-      ImGui::BeginDisabled(!opts.ssao);
-      imguiImage(ctx.ssaoBuffer.getSsaoTexture(),
-                 glm::vec2(imageBaseSize * ctx.camera.getAspectRatio(),
-                           imageBaseSize));
-
-      imguiFloatSlider("SSAO radius", &opts.ssaoRadius, 0.01, 5.0, "%.04f",
-                       Scale::LOG);
-      imguiFloatSlider("SSAO bias", &opts.ssaoBias, 0.0001, 1.0, "%.04f",
-                       Scale::LOG);
-      ImGui::EndDisabled();
-
-      ImGui::BeginDisabled(opts.lightingModel != LightingModel::BLINN_PHONG);
-      imguiFloatSlider("Shininess", &opts.shininess, 1.0f, 1000.0f, nullptr,
-                       Scale::LOG);
-      ImGui::SameLine();
-      imguiHelpMarker(
-          "Shininess of specular highlights. Only applies to Phong.");
-      ImGui::EndDisabled();
-
-      ImGui::TreePop();
+        ImGui::Checkbox( "Capture mouse", &opts.captureMouse );
     }
 
-    if (ImGui::TreeNode("Post-processing")) {
-      ImGui::Checkbox("Bloom", &opts.bloom);
-      ImGui::BeginDisabled(!opts.bloom);
-      imguiFloatSlider("Bloom mix", &opts.bloomMix, 0.001f, 1.0f, nullptr,
-                       Scale::LOG);
-      ImGui::EndDisabled();
+    if ( ImGui::CollapsingHeader( "Debug" ) ) {
+        ImGui::Combo(
+            "G-Buffer vis", reinterpret_cast<int*>( &opts.gBufferVis ),
+            "Disabled\0Positions\0Ambient "
+            "occlusion\0Normals\0Roughness\0Albedo\0Metallic\0Emission\0\0" );
+        ImGui::SameLine();
+        imguiHelpMarker( "What component of the G-Buffer to visualize." );
 
-      ImGui::Combo(
-          "Tone mapping", reinterpret_cast<int*>(&opts.toneMapping),
-          "None\0Reinhard\0Reinhard luminance\0ACES (approx)\0AMD\0\0");
-      ImGui::Checkbox("Gamma correct", &opts.gammaCorrect);
-      ImGui::BeginDisabled(!opts.gammaCorrect);
-      imguiFloatSlider("Gamma", &opts.gamma, 0.01f, 8.0f, nullptr, Scale::LOG);
-      ImGui::EndDisabled();
-
-      ImGui::Checkbox("FXAA", &opts.fxaa);
-
-      ImGui::TreePop();
-    }
-  }
-
-  if (ImGui::CollapsingHeader("Camera")) {
-    ImGui::RadioButton("Fly controls",
-                       reinterpret_cast<int*>(&opts.cameraControlType),
-                       static_cast<int>(CameraControlType::FLY));
-    ImGui::SameLine();
-    ImGui::RadioButton("Orbit controls",
-                       reinterpret_cast<int*>(&opts.cameraControlType),
-                       static_cast<int>(CameraControlType::ORBIT));
-
-    imguiFloatSlider("Speed", &opts.speed, 0.1, 50.0);
-    imguiFloatSlider("Sensitivity", &opts.sensitivity, 0.01, 1.0, nullptr,
-                     Scale::LOG);
-    imguiFloatSlider("FoV", &opts.fov, qrk::MIN_FOV, qrk::MAX_FOV, "%.1f°");
-    if (imguiFloatSlider("Near plane", &opts.near, 0.01, 1000.0, nullptr,
-                         Scale::LOG)) {
-      if (opts.near > opts.far) {
-        opts.far = opts.near;
-      }
-    }
-    if (imguiFloatSlider("Far plane", &opts.far, 0.01, 1000.0, nullptr,
-                         Scale::LOG)) {
-      if (opts.far < opts.near) {
-        opts.near = opts.far;
-      }
+        ImGui::Checkbox( "Wireframe", &opts.wireframe );
+        ImGui::Checkbox( "Draw vertex normals", &opts.drawNormals );
     }
 
-    ImGui::Checkbox("Capture mouse", &opts.captureMouse);
-  }
+    if ( ImGui::CollapsingHeader( "Performance" ) ) {
+        char overlay[ 32 ];
+        sprintf( overlay, "Avg FPS %.02f", opts.avgFPS );
+        ImGui::PlotLines( "Frame time", opts.frameDeltas, opts.numFrameDeltas,
+                          opts.frameDeltasOffset, overlay, 0.0f, 0.03f,
+                          ImVec2( 0, 80.0f ) );
 
-  if (ImGui::CollapsingHeader("Debug")) {
-    ImGui::Combo(
-        "G-Buffer vis", reinterpret_cast<int*>(&opts.gBufferVis),
-        "Disabled\0Positions\0Ambient "
-        "occlusion\0Normals\0Roughness\0Albedo\0Metallic\0Emission\0\0");
-    ImGui::SameLine();
-    imguiHelpMarker("What component of the G-Buffer to visualize.");
+        ImGui::Checkbox( "Enable VSync", &opts.enableVsync );
+    }
 
-    ImGui::Checkbox("Wireframe", &opts.wireframe);
-    ImGui::Checkbox("Draw vertex normals", &opts.drawNormals);
-  }
+    ImGui::EndChild();
 
-  if (ImGui::CollapsingHeader("Performance")) {
-    char overlay[32];
-    sprintf(overlay, "Avg FPS %.02f", opts.avgFPS);
-    ImGui::PlotLines("Frame time", opts.frameDeltas, opts.numFrameDeltas,
-                     opts.frameDeltasOffset, overlay, 0.0f, 0.03f,
-                     ImVec2(0, 80.0f));
-
-    ImGui::Checkbox("Enable VSync", &opts.enableVsync);
-  }
-
-  ImGui::EndChild();
-
-  ImGui::End();
-  ImGui::Render();
+    ImGui::End();
+    ImGui::Render();
 }
 
 /** Loads a model based on command line flag, or a default. */
 std::unique_ptr<qrk::Model> loadModelOrDefault() {
-  std::string modelPath = absl::GetFlag(FLAGS_model);
+    std::string modelPath = absl::GetFlag( FLAGS_model );
 
-  if (!modelPath.empty()) {
-    return std::make_unique<qrk::Model>(modelPath.c_str());
-  }
+    if ( !modelPath.empty() ) {
+        return std::make_unique<qrk::Model>( modelPath.c_str() );
+    }
 
-  // Default to the gltf DamagedHelmet.
-  auto helmet = std::make_unique<qrk::Model>(
-      "examples/assets/DamagedHelmet/DamagedHelmet.gltf");
-  return helmet;
+    // Default to the gltf DamagedHelmet.
+    auto helmet = std::make_unique<qrk::Model>(
+        "examples/assets/DamagedHelmet/DamagedHelmet.gltf" );
+    return helmet;
 }
 
 /** Loads a skybox image as a cubemap and generates IBL info. */
@@ -519,517 +536,532 @@ void loadSkyboxImage(
     SkyboxImage skyboxImage, qrk::SkyboxMesh& skybox,
     qrk::EquirectCubemapConverter& equirectCubemapConverter,
     qrk::CubemapIrradianceCalculator& irradianceCalculator,
-    qrk::GGXPrefilteredEnvMapCalculator& prefilteredEnvMapCalculator) {
-  std::string hdrPath;
-  switch (skyboxImage) {
-    case SkyboxImage::ALEXS_APT:
-      hdrPath = "examples/assets/ibl/AlexsApt.hdr";
-      break;
-    case SkyboxImage::FROZEN_WATERFALL:
-      hdrPath = "examples/assets/ibl/FrozenWaterfall.hdr";
-      break;
-    case SkyboxImage::KLOPPENHEIM:
-      hdrPath = "examples/assets/ibl/Kloppenheim.hdr";
-      break;
-    case SkyboxImage::MILKYWAY:
-      hdrPath = "examples/assets/ibl/Milkyway.hdr";
-      break;
-    case SkyboxImage::MON_VALLEY:
-      hdrPath = "examples/assets/ibl/MonValley.hdr";
-      break;
-    case SkyboxImage::UENO_SHRINE:
-      hdrPath = "examples/assets/ibl/UenoShrine.hdr";
-      break;
-    case SkyboxImage::WINTER_FOREST:
-      hdrPath = "examples/assets/ibl/WinterForest.hdr";
-      break;
-  }
+    qrk::GGXPrefilteredEnvMapCalculator& prefilteredEnvMapCalculator ) {
+    std::string hdrPath;
+    switch ( skyboxImage ) {
+        case SkyboxImage::ALEXS_APT:
+            hdrPath = "examples/assets/ibl/AlexsApt.hdr";
+            break;
+        case SkyboxImage::FROZEN_WATERFALL:
+            hdrPath = "examples/assets/ibl/FrozenWaterfall.hdr";
+            break;
+        case SkyboxImage::KLOPPENHEIM:
+            hdrPath = "examples/assets/ibl/Kloppenheim.hdr";
+            break;
+        case SkyboxImage::MILKYWAY:
+            hdrPath = "examples/assets/ibl/Milkyway.hdr";
+            break;
+        case SkyboxImage::MON_VALLEY:
+            hdrPath = "examples/assets/ibl/MonValley.hdr";
+            break;
+        case SkyboxImage::UENO_SHRINE:
+            hdrPath = "examples/assets/ibl/UenoShrine.hdr";
+            break;
+        case SkyboxImage::WINTER_FOREST:
+            hdrPath = "examples/assets/ibl/WinterForest.hdr";
+            break;
+    }
 
-  qrk::Texture hdr = qrk::Texture::loadHdr(hdrPath.c_str());
+    qrk::Texture hdr = qrk::Texture::loadHdr( hdrPath.c_str() );
 
-  // Process HDR cubemap
-  {
-    qrk::DebugGroup debugGroup("HDR equirect to cubemap");
-    equirectCubemapConverter.multipassDraw(hdr);
-  }
-  auto cubemap = equirectCubemapConverter.getCubemap();
-  {
-    qrk::DebugGroup debugGroup("Irradiance calculation");
-    irradianceCalculator.multipassDraw(cubemap);
-  }
-  {
-    qrk::DebugGroup debugGroup("Prefiltered env map calculation");
-    prefilteredEnvMapCalculator.multipassDraw(cubemap);
-  }
+    // Process HDR cubemap
+    {
+        qrk::DebugGroup debugGroup( "HDR equirect to cubemap" );
+        equirectCubemapConverter.multipassDraw( hdr );
+    }
+    auto cubemap = equirectCubemapConverter.getCubemap();
+    {
+        qrk::DebugGroup debugGroup( "Irradiance calculation" );
+        irradianceCalculator.multipassDraw( cubemap );
+    }
+    {
+        qrk::DebugGroup debugGroup( "Prefiltered env map calculation" );
+        prefilteredEnvMapCalculator.multipassDraw( cubemap );
+    }
 
-  skybox.setTexture(cubemap);
+    skybox.setTexture( cubemap );
 
-  // Don't need this anymore.
-  hdr.free();
+    // Don't need this anymore.
+    hdr.free();
 }
 
-int main(int argc, char** argv) {
-  absl::SetProgramUsageMessage(
-      "quarkGL model viewer. Usage:\n  model_render --model path/to/model.obj");
-  absl::ParseCommandLine(argc, argv);
+int main( int argc, char** argv ) {
+    absl::SetProgramUsageMessage(
+        "quarkGL model viewer. Usage:\n  model_render --model "
+        "path/to/model.obj" );
+    absl::ParseCommandLine( argc, argv );
 
-  enableHighDpiSupport();
+    enableHighDpiSupport();
 
-  qrk::Window win(1920, 1080, "Model Render", /* fullscreen */ false,
-                  /* samples */ 0);
-  win.setClearColor(glm::vec4(0.1f, 0.1f, 0.1f, 1.0f));
-  win.setEscBehavior(qrk::EscBehavior::UNCAPTURE_MOUSE_OR_CLOSE);
+    qrk::Window win( 1920, 1080, "Model Render", /* fullscreen */ false,
+                     /* samples */ 0 );
+    win.setClearColor( glm::vec4( 0.1f, 0.1f, 0.1f, 1.0f ) );
+    win.setEscBehavior( qrk::EscBehavior::UNCAPTURE_MOUSE_OR_CLOSE );
 
-  // Setup Dear ImGui.
-  IMGUI_CHECKVERSION();
-  ImGui::CreateContext();
-  ImGuiIO& io = ImGui::GetIO();
-  ImGui_ImplGlfw_InitForOpenGL(win.getGlfwRef(), /*install_callbacks=*/true);
-  ImGui_ImplOpenGL3_Init("#version 460 core");
-  ImGuiScaleState imguiScaleState;
-  imguiScaleState.baseStyle = ImGui::GetStyle();
-  applyImGuiScale(win.getGlfwRef(), imguiScaleState);
+    // Setup Dear ImGui.
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO();
+    ImGui_ImplGlfw_InitForOpenGL( win.getGlfwRef(),
+                                  /*install_callbacks=*/true );
+    ImGui_ImplOpenGL3_Init( "#version 460 core" );
+    ImGuiScaleState imguiScaleState;
+    imguiScaleState.baseStyle = ImGui::GetStyle();
+    applyImGuiScale( win.getGlfwRef(), imguiScaleState );
 
-  // == Main setup ==
+    // == Main setup ==
 
-  // Prepare opts for usage.
-  ModelRenderOptions opts;
+    // Prepare opts for usage.
+    ModelRenderOptions opts;
 
-  // Setup the camera.
-  auto camera =
-      std::make_shared<qrk::Camera>(/* position */ glm::vec3(0.0f, 0.0f, 3.0f));
-  std::shared_ptr<qrk::CameraControls> cameraControls =
-      std::make_shared<qrk::OrbitCameraControls>(*camera);
-  win.bindCamera(camera);
-  win.bindCameraControls(cameraControls);
+    // Setup the camera.
+    auto camera = std::make_shared<qrk::Camera>(
+        /* position */ glm::vec3( 0.0f, 0.0f, 3.0f ) );
+    std::shared_ptr<qrk::CameraControls> cameraControls =
+        std::make_shared<qrk::OrbitCameraControls>( *camera );
+    win.bindCamera( camera );
+    win.bindCameraControls( cameraControls );
 
-  // Create light registry and add lights.
-  auto lightRegistry = std::make_shared<qrk::LightRegistry>();
-  lightRegistry->setViewSource(camera);
+    // Create light registry and add lights.
+    auto lightRegistry = std::make_shared<qrk::LightRegistry>();
+    lightRegistry->setViewSource( camera );
 
-  auto directionalLight = std::make_shared<qrk::DirectionalLight>();
-  lightRegistry->addLight(directionalLight);
+    auto directionalLight = std::make_shared<qrk::DirectionalLight>();
+    lightRegistry->addLight( directionalLight );
 
-  auto pointLight =
-      std::make_shared<qrk::PointLight>(glm::vec3(1.2f, 1.0f, 2.0f));
-  pointLight->setSpecular(glm::vec3(0.5f, 0.5f, 0.5f));
-  // lightRegistry->addLight(pointLight);
+    auto pointLight =
+        std::make_shared<qrk::PointLight>( glm::vec3( 1.2f, 1.0f, 2.0f ) );
+    pointLight->setSpecular( glm::vec3( 0.5f, 0.5f, 0.5f ) );
+    // lightRegistry->addLight(pointLight);
 
-  // Create a mesh for the light.
-  qrk::SphereMesh lightSphere;
-  lightSphere.setModelTransform(
-      glm::scale(glm::translate(glm::mat4(1.0f), pointLight->getPosition()),
-                 glm::vec3(0.2f)));
+    // Create a mesh for the light.
+    qrk::SphereMesh lightSphere;
+    lightSphere.setModelTransform( glm::scale(
+        glm::translate( glm::mat4( 1.0f ), pointLight->getPosition() ),
+        glm::vec3( 0.2f ) ) );
 
-  // Set up the main framebuffer that will store intermediate states.
-  qrk::Framebuffer mainFb(win.getSize());
-  auto mainColorAttachment =
-      mainFb.attachTexture(qrk::BufferType::COLOR_HDR_ALPHA);
-  mainFb.attachRenderbuffer(qrk::BufferType::DEPTH_AND_STENCIL);
+    // Set up the main framebuffer that will store intermediate states.
+    qrk::Framebuffer mainFb( win.getSize() );
+    auto mainColorAttachment =
+        mainFb.attachTexture( qrk::BufferType::COLOR_HDR_ALPHA );
+    mainFb.attachRenderbuffer( qrk::BufferType::DEPTH_AND_STENCIL );
 
-  qrk::Framebuffer finalFb(win.getSize());
-  auto finalColorAttachment =
-      finalFb.attachTexture(qrk::BufferType::COLOR_ALPHA);
+    qrk::Framebuffer finalFb( win.getSize() );
+    auto finalColorAttachment =
+        finalFb.attachTexture( qrk::BufferType::COLOR_ALPHA );
 
-  // Build the G-Buffer and prepare deferred shading.
-  qrk::DeferredGeometryPassShader geometryPassShader;
-  geometryPassShader.addUniformSource(camera);
+    // Build the G-Buffer and prepare deferred shading.
+    qrk::DeferredGeometryPassShader geometryPassShader;
+    geometryPassShader.addUniformSource( camera );
 
-  auto gBuffer = std::make_shared<qrk::GBuffer>(win.getSize());
-  auto lightingTextureRegistry = std::make_shared<qrk::TextureRegistry>();
-  lightingTextureRegistry->addTextureSource(gBuffer);
+    auto gBuffer = std::make_shared<qrk::GBuffer>( win.getSize() );
+    auto lightingTextureRegistry = std::make_shared<qrk::TextureRegistry>();
+    lightingTextureRegistry->addTextureSource( gBuffer );
 
-  qrk::ScreenQuadMesh screenQuad;
-  qrk::ScreenShader gBufferVisShader(
-      qrk::ShaderPath("model_render/shaders/gbuffer_vis.frag"));
+    qrk::ScreenQuadMesh screenQuad;
+    qrk::ScreenShader gBufferVisShader(
+        qrk::ShaderPath( "model_render/shaders/gbuffer_vis.frag" ) );
 
-  qrk::ScreenShader lightingPassShader(
-      qrk::ShaderPath("model_render/shaders/lighting_pass.frag"));
-  lightingPassShader.addUniformSource(camera);
-  lightingPassShader.addUniformSource(lightingTextureRegistry);
-  lightingPassShader.addUniformSource(lightRegistry);
+    qrk::ScreenShader lightingPassShader(
+        qrk::ShaderPath( "model_render/shaders/lighting_pass.frag" ) );
+    lightingPassShader.addUniformSource( camera );
+    lightingPassShader.addUniformSource( lightingTextureRegistry );
+    lightingPassShader.addUniformSource( lightRegistry );
 
-  // Setup shadow mapping.
-  constexpr int SHADOW_MAP_SIZE = 2048;
-  auto shadowMap =
-      std::make_shared<qrk::ShadowMap>(SHADOW_MAP_SIZE, SHADOW_MAP_SIZE);
-  lightingTextureRegistry->addTextureSource(shadowMap);
+    // Setup shadow mapping.
+    constexpr int SHADOW_MAP_SIZE = 2048;
+    auto shadowMap =
+        std::make_shared<qrk::ShadowMap>( SHADOW_MAP_SIZE, SHADOW_MAP_SIZE );
+    lightingTextureRegistry->addTextureSource( shadowMap );
 
-  qrk::ShadowMapShader shadowShader;
-  auto shadowCamera = std::make_shared<qrk::ShadowCamera>(directionalLight);
-  shadowShader.addUniformSource(shadowCamera);
-  lightingPassShader.addUniformSource(shadowCamera);
+    qrk::ShadowMapShader shadowShader;
+    auto shadowCamera = std::make_shared<qrk::ShadowCamera>( directionalLight );
+    shadowShader.addUniformSource( shadowCamera );
+    lightingPassShader.addUniformSource( shadowCamera );
 
-  // Setup SSAO.
-  qrk::SsaoShader ssaoShader;
-  ssaoShader.addUniformSource(camera);
+    // Setup SSAO.
+    qrk::SsaoShader ssaoShader;
+    ssaoShader.addUniformSource( camera );
 
-  auto ssaoKernel = std::make_shared<qrk::SsaoKernel>();
-  ssaoShader.addUniformSource(ssaoKernel);
-  auto ssaoBuffer = std::make_shared<qrk::SsaoBuffer>(win.getSize());
+    auto ssaoKernel = std::make_shared<qrk::SsaoKernel>();
+    ssaoShader.addUniformSource( ssaoKernel );
+    auto ssaoBuffer = std::make_shared<qrk::SsaoBuffer>( win.getSize() );
 
-  auto ssaoTextureRegistry = std::make_shared<qrk::TextureRegistry>();
-  ssaoTextureRegistry->addTextureSource(gBuffer);
-  ssaoTextureRegistry->addTextureSource(ssaoKernel);
-  ssaoShader.addUniformSource(ssaoTextureRegistry);
+    auto ssaoTextureRegistry = std::make_shared<qrk::TextureRegistry>();
+    ssaoTextureRegistry->addTextureSource( gBuffer );
+    ssaoTextureRegistry->addTextureSource( ssaoKernel );
+    ssaoShader.addUniformSource( ssaoTextureRegistry );
 
-  qrk::SsaoBlurShader ssaoBlurShader;
-  auto ssaoBlurredBuffer = std::make_shared<qrk::SsaoBuffer>(win.getSize());
-  lightingTextureRegistry->addTextureSource(ssaoBlurredBuffer);
+    qrk::SsaoBlurShader ssaoBlurShader;
+    auto ssaoBlurredBuffer = std::make_shared<qrk::SsaoBuffer>( win.getSize() );
+    lightingTextureRegistry->addTextureSource( ssaoBlurredBuffer );
 
-  // Setup post processing.
-  auto bloomPass = std::make_shared<qrk::BloomPass>(win.getSize());
+    // Setup post processing.
+    auto bloomPass = std::make_shared<qrk::BloomPass>( win.getSize() );
 
-  auto postprocessTextureRegistry = std::make_shared<qrk::TextureRegistry>();
-  postprocessTextureRegistry->addTextureSource(bloomPass);
-  qrk::ScreenShader postprocessShader(
-      qrk::ShaderPath("model_render/shaders/post_processing.frag"));
-  postprocessShader.addUniformSource(postprocessTextureRegistry);
+    auto postprocessTextureRegistry = std::make_shared<qrk::TextureRegistry>();
+    postprocessTextureRegistry->addTextureSource( bloomPass );
+    qrk::ScreenShader postprocessShader(
+        qrk::ShaderPath( "model_render/shaders/post_processing.frag" ) );
+    postprocessShader.addUniformSource( postprocessTextureRegistry );
 
-  qrk::FXAAShader fxaaShader;
+    qrk::FXAAShader fxaaShader;
 
-  // Setup skybox and IBL.
-  qrk::SkyboxShader skyboxShader;
-  skyboxShader.addUniformSource(camera);
+    // Setup skybox and IBL.
+    qrk::SkyboxShader skyboxShader;
+    skyboxShader.addUniformSource( camera );
 
-  constexpr int CUBEMAP_SIZE = 1024;
-  qrk::EquirectCubemapConverter equirectCubemapConverter(
-      CUBEMAP_SIZE, CUBEMAP_SIZE, /*generateMips=*/true);
+    constexpr int CUBEMAP_SIZE = 1024;
+    qrk::EquirectCubemapConverter equirectCubemapConverter(
+        CUBEMAP_SIZE, CUBEMAP_SIZE, /*generateMips=*/true );
 
-  // Irradiance map averages radiance uniformly so it doesn't have a lot of high
-  // frequency details and can thus be small.
-  auto irradianceCalculator =
-      std::make_shared<qrk::CubemapIrradianceCalculator>(32, 32);
-  auto irradianceMap = irradianceCalculator->getIrradianceMap();
-  lightingTextureRegistry->addTextureSource(irradianceCalculator);
+    // Irradiance map averages radiance uniformly so it doesn't have a lot of
+    // high frequency details and can thus be small.
+    auto irradianceCalculator =
+        std::make_shared<qrk::CubemapIrradianceCalculator>( 32, 32 );
+    auto irradianceMap = irradianceCalculator->getIrradianceMap();
+    lightingTextureRegistry->addTextureSource( irradianceCalculator );
 
-  // Create prefiltered envmap for specular IBL. It doesn't have to be super
-  // large.
-  auto prefilteredEnvMapCalculator =
-      std::make_shared<qrk::GGXPrefilteredEnvMapCalculator>(CUBEMAP_SIZE,
-                                                            CUBEMAP_SIZE);
-  auto prefilteredEnvMap = prefilteredEnvMapCalculator->getPrefilteredEnvMap();
-  lightingTextureRegistry->addTextureSource(prefilteredEnvMapCalculator);
-  lightingPassShader.addUniformSource(prefilteredEnvMapCalculator);
+    // Create prefiltered envmap for specular IBL. It doesn't have to be super
+    // large.
+    auto prefilteredEnvMapCalculator =
+        std::make_shared<qrk::GGXPrefilteredEnvMapCalculator>( CUBEMAP_SIZE,
+                                                               CUBEMAP_SIZE );
+    auto prefilteredEnvMap =
+        prefilteredEnvMapCalculator->getPrefilteredEnvMap();
+    lightingTextureRegistry->addTextureSource( prefilteredEnvMapCalculator );
+    lightingPassShader.addUniformSource( prefilteredEnvMapCalculator );
 
-  auto brdfLUT = std::make_shared<qrk::GGXBrdfIntegrationCalculator>(
-      CUBEMAP_SIZE, CUBEMAP_SIZE);
-  {
-    // Only needs to be calculated once up front.
-    qrk::DebugGroup debugGroup("BRDF LUT calculation");
-    brdfLUT->draw();
-  }
-  auto brdfIntegrationMap = brdfLUT->getBrdfIntegrationMap();
-  lightingTextureRegistry->addTextureSource(brdfLUT);
-
-  qrk::SkyboxMesh skybox;
-
-  // Load the actual env map and generate IBL textures.
-  loadSkyboxImage(opts.skyboxImage, skybox, equirectCubemapConverter,
-                  *irradianceCalculator, *prefilteredEnvMapCalculator);
-
-  // Prepare some debug shaders.
-  qrk::Shader normalShader(
-      qrk::ShaderPath("model_render/shaders/model.vert"),
-      qrk::ShaderInline(normalShaderSource),
-      qrk::ShaderPath("model_render/shaders/model_normals.geom"));
-  normalShader.addUniformSource(camera);
-
-  qrk::Shader lampShader(qrk::ShaderPath("model_render/shaders/model.vert"),
-                         qrk::ShaderInline(lampShaderSource));
-  lampShader.addUniformSource(camera);
-
-  // Load primary model.
-  std::unique_ptr<qrk::Model> model = loadModelOrDefault();
-
-  win.enableFaceCull();
-  win.loop([&](float deltaTime) {
-    // ImGui logic.
-    applyImGuiScale(win.getGlfwRef(), imguiScaleState);
-    ImGui_ImplOpenGL3_NewFrame();
-    ImGui_ImplGlfw_NewFrame();
-    ImGui::NewFrame();
-
-    win.setMouseInputPaused(io.WantCaptureMouse);
-    win.setKeyInputPaused(io.WantCaptureKeyboard);
-
-    ModelRenderOptions prevOpts = opts;
-
-    // Initialize with certain current options.
-    opts.speed = cameraControls->getSpeed();
-    opts.sensitivity = cameraControls->getSensitivity();
-    opts.fov = camera->getFov();
-    opts.near = camera->getNearPlane();
-    opts.far = camera->getFarPlane();
-
-    opts.frameDeltas = win.getFrameDeltas();
-    opts.numFrameDeltas = win.getNumFrameDeltas();
-    opts.frameDeltasOffset = win.getFrameDeltasOffset();
-    opts.avgFPS = win.getAvgFPS();
-
-    // Render UI.
-    UIContext ctx(*camera, *shadowMap, *ssaoBlurredBuffer);
-    renderImGuiUI(opts, ctx);
-
-    // Post-process options. Some option values are used later during rendering.
-    model->setModelTransform(glm::scale(glm::mat4_cast(opts.modelRotation),
-                                        glm::vec3(opts.modelScale)));
-
-    directionalLight->setDiffuse(opts.directionalDiffuse *
-                                 opts.directionalIntensity);
-    directionalLight->setSpecular(opts.directionalSpecular *
-                                  opts.directionalIntensity);
-    directionalLight->setDirection(opts.directionalDirection);
-
-    cameraControls->setSpeed(opts.speed);
-    cameraControls->setSensitivity(opts.sensitivity);
-    camera->setFov(opts.fov);
-    camera->setNearPlane(opts.near);
-    camera->setFarPlane(opts.far);
-
-    if (opts.cameraControlType != prevOpts.cameraControlType) {
-      std::shared_ptr<qrk::CameraControls> newControls;
-      switch (opts.cameraControlType) {
-        case CameraControlType::FLY:
-          newControls = std::make_shared<qrk::FlyCameraControls>();
-          break;
-        case CameraControlType::ORBIT:
-          newControls = std::make_shared<qrk::OrbitCameraControls>(*camera);
-          break;
-      }
-      newControls->setSpeed(cameraControls->getSpeed());
-      newControls->setSensitivity(cameraControls->getSensitivity());
-      cameraControls = newControls;
-      win.bindCameraControls(cameraControls);
-    }
-    if (opts.enableVsync != prevOpts.enableVsync) {
-      if (opts.enableVsync) {
-        win.enableVsync();
-      } else {
-        win.disableVsync();
-      }
-    }
-    if (opts.skyboxImage != prevOpts.skyboxImage) {
-      loadSkyboxImage(opts.skyboxImage, skybox, equirectCubemapConverter,
-                      *irradianceCalculator, *prefilteredEnvMapCalculator);
-    }
-
-    win.setMouseButtonBehavior(opts.captureMouse
-                                   ? qrk::MouseButtonBehavior::CAPTURE_MOUSE
-                                   : qrk::MouseButtonBehavior::NONE);
-
-    // == Main render path ==
-    // Step 0: optional shadow pass.
-    if (opts.shadowMapping) {
-      qrk::DebugGroup debugGroup("Directional shadow map");
-      shadowCamera->setCuboidExtents(opts.shadowCameraCuboidExtents);
-      shadowCamera->setNearPlane(opts.shadowCameraNear);
-      shadowCamera->setFarPlane(opts.shadowCameraFar);
-      shadowCamera->setDistanceFromOrigin(opts.shadowCameraDistance);
-
-      shadowMap->activate();
-      shadowMap->clear();
-      shadowShader.updateUniforms();
-      model->draw(shadowShader);
-      shadowMap->deactivate();
-    }
-
-    // Step 1: geometry pass. Build the G-Buffer.
+    auto brdfLUT = std::make_shared<qrk::GGXBrdfIntegrationCalculator>(
+        CUBEMAP_SIZE, CUBEMAP_SIZE );
     {
-      qrk::DebugGroup debugGroup("Geometry pass");
-      gBuffer->activate();
-      gBuffer->clear();
-
-      geometryPassShader.updateUniforms();
-
-      // Draw model.
-      if (opts.wireframe) {
-        win.enableWireframe();
-      }
-      model->draw(geometryPassShader);
-      if (opts.wireframe) {
-        win.disableWireframe();
-      }
-
-      gBuffer->deactivate();
+        // Only needs to be calculated once up front.
+        qrk::DebugGroup debugGroup( "BRDF LUT calculation" );
+        brdfLUT->draw();
     }
+    auto brdfIntegrationMap = brdfLUT->getBrdfIntegrationMap();
+    lightingTextureRegistry->addTextureSource( brdfLUT );
 
-    if (opts.gBufferVis != GBufferVis::DISABLED) {
-      {
-        qrk::DebugGroup debugGroup("G-Buffer vis");
-        switch (opts.gBufferVis) {
-          case GBufferVis::POSITIONS:
-          case GBufferVis::AO:
-            screenQuad.setTexture(gBuffer->getPositionAOTexture());
-            break;
-          case GBufferVis::NORMALS:
-          case GBufferVis::ROUGHNESS:
-            screenQuad.setTexture(gBuffer->getNormalRoughnessTexture());
-            break;
-          case GBufferVis::ALBEDO:
-          case GBufferVis::METALLIC:
-            screenQuad.setTexture(gBuffer->getAlbedoMetallicTexture());
-            break;
-          case GBufferVis::EMISSION:
-            screenQuad.setTexture(gBuffer->getEmissionTexture());
-            break;
-          case GBufferVis::DISABLED:
-            break;
-        };
-        gBufferVisShader.setInt("gBufferVis",
-                                static_cast<int>(opts.gBufferVis));
-        screenQuad.draw(gBufferVisShader);
-      }
+    qrk::SkyboxMesh skybox;
 
-      // TODO: Refactor avoid needing to copy this.
-      {
-        qrk::DebugGroup debugGroup("Imgui pass");
-        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-      }
-      return;
-    }
+    // Load the actual env map and generate IBL textures.
+    loadSkyboxImage( opts.skyboxImage, skybox, equirectCubemapConverter,
+                     *irradianceCalculator, *prefilteredEnvMapCalculator );
 
-    // Step 1.2: optional SSAO pass.
-    // TODO: Extract into an "SSAO pass".
-    if (opts.ssao) {
-      qrk::DebugGroup debugGroup("SSAO pass");
-      ssaoKernel->setRadius(opts.ssaoRadius);
-      ssaoKernel->setBias(opts.ssaoBias);
+    // Prepare some debug shaders.
+    qrk::Shader normalShader(
+        qrk::ShaderPath( "model_render/shaders/model.vert" ),
+        qrk::ShaderInline( normalShaderSource ),
+        qrk::ShaderPath( "model_render/shaders/model_normals.geom" ) );
+    normalShader.addUniformSource( camera );
 
-      ssaoBuffer->activate();
-      ssaoBuffer->clear();
+    qrk::Shader lampShader(
+        qrk::ShaderPath( "model_render/shaders/model.vert" ),
+        qrk::ShaderInline( lampShaderSource ) );
+    lampShader.addUniformSource( camera );
 
-      ssaoShader.updateUniforms();
+    // Load primary model.
+    std::unique_ptr<qrk::Model> model = loadModelOrDefault();
 
-      screenQuad.unsetTexture();
-      screenQuad.draw(ssaoShader, ssaoTextureRegistry.get());
+    win.enableFaceCull();
+    win.loop( [ & ]( float deltaTime ) {
+        // ImGui logic.
+        applyImGuiScale( win.getGlfwRef(), imguiScaleState );
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
 
-      ssaoBuffer->deactivate();
+        win.setMouseInputPaused( io.WantCaptureMouse );
+        win.setKeyInputPaused( io.WantCaptureKeyboard );
 
-      // Step 1.2.1: SSAO blur.
-      ssaoBlurredBuffer->activate();
-      ssaoBlurredBuffer->clear();
+        ModelRenderOptions prevOpts = opts;
 
-      ssaoBlurShader.configureWith(*ssaoKernel, *ssaoBuffer);
-      screenQuad.draw(ssaoBlurShader);
+        // Initialize with certain current options.
+        opts.speed = cameraControls->getSpeed();
+        opts.sensitivity = cameraControls->getSensitivity();
+        opts.fov = camera->getFov();
+        opts.near = camera->getNearPlane();
+        opts.far = camera->getFarPlane();
 
-      ssaoBlurredBuffer->deactivate();
-    }
+        opts.frameDeltas = win.getFrameDeltas();
+        opts.numFrameDeltas = win.getNumFrameDeltas();
+        opts.frameDeltasOffset = win.getFrameDeltasOffset();
+        opts.avgFPS = win.getAvgFPS();
 
-    // Step 2: lighting pass. Draw to the main framebuffer.
-    {
-      qrk::DebugGroup debugGroup("Deferred lighting pass");
-      mainFb.activate();
-      mainFb.clear();
+        // Render UI.
+        UIContext ctx( *camera, *shadowMap, *ssaoBlurredBuffer );
+        renderImGuiUI( opts, ctx );
 
-      // TODO: Set up environment mapping with the skybox.
-      lightingPassShader.updateUniforms();
-      lightingPassShader.setBool("shadowMapping", opts.shadowMapping);
-      lightingPassShader.setFloat("shadowBiasMin", opts.shadowBiasMin);
-      lightingPassShader.setFloat("shadowBiasMax", opts.shadowBiasMax);
-      lightingPassShader.setBool("useIBL", opts.useIBL);
-      lightingPassShader.setBool("ssao", opts.ssao);
-      lightingPassShader.setInt("lightingModel",
-                                static_cast<int>(opts.lightingModel));
-      // TODO: Pull this out into a material class.
-      lightingPassShader.setVec3("ambient", opts.ambientColor);
-      lightingPassShader.setFloat("shininess", opts.shininess);
-      lightingPassShader.setFloat("emissionIntensity", opts.emissionIntensity);
-      lightingPassShader.setFloat("emissionAttenuation.constant",
-                                  opts.emissionAttenuation.x);
-      lightingPassShader.setFloat("emissionAttenuation.linear",
-                                  opts.emissionAttenuation.y);
-      lightingPassShader.setFloat("emissionAttenuation.quadratic",
-                                  opts.emissionAttenuation.z);
+        // Post-process options. Some option values are used later during
+        // rendering.
+        model->setModelTransform(
+            glm::scale( glm::mat4_cast( opts.modelRotation ),
+                        glm::vec3( opts.modelScale ) ) );
 
-      screenQuad.unsetTexture();
-      screenQuad.draw(lightingPassShader, lightingTextureRegistry.get());
+        directionalLight->setDiffuse( opts.directionalDiffuse *
+                                      opts.directionalIntensity );
+        directionalLight->setSpecular( opts.directionalSpecular *
+                                       opts.directionalIntensity );
+        directionalLight->setDirection( opts.directionalDirection );
 
-      mainFb.deactivate();
-    }
+        cameraControls->setSpeed( opts.speed );
+        cameraControls->setSensitivity( opts.sensitivity );
+        camera->setFov( opts.fov );
+        camera->setNearPlane( opts.near );
+        camera->setFarPlane( opts.far );
 
-    // Step 3: forward render anything else on top.
-    {
-      qrk::DebugGroup debugGroup("Forward pass");
+        if ( opts.cameraControlType != prevOpts.cameraControlType ) {
+            std::shared_ptr<qrk::CameraControls> newControls;
+            switch ( opts.cameraControlType ) {
+                case CameraControlType::FLY:
+                    newControls = std::make_shared<qrk::FlyCameraControls>();
+                    break;
+                case CameraControlType::ORBIT:
+                    newControls =
+                        std::make_shared<qrk::OrbitCameraControls>( *camera );
+                    break;
+            }
+            newControls->setSpeed( cameraControls->getSpeed() );
+            newControls->setSensitivity( cameraControls->getSensitivity() );
+            cameraControls = newControls;
+            win.bindCameraControls( cameraControls );
+        }
+        if ( opts.enableVsync != prevOpts.enableVsync ) {
+            if ( opts.enableVsync ) {
+                win.enableVsync();
+            } else {
+                win.disableVsync();
+            }
+        }
+        if ( opts.skyboxImage != prevOpts.skyboxImage ) {
+            loadSkyboxImage( opts.skyboxImage, skybox, equirectCubemapConverter,
+                             *irradianceCalculator,
+                             *prefilteredEnvMapCalculator );
+        }
 
-      // Before we do so, we have to blit the depth buffer.
-      gBuffer->blit(mainFb, GL_DEPTH_BUFFER_BIT);
+        win.setMouseButtonBehavior(
+            opts.captureMouse ? qrk::MouseButtonBehavior::CAPTURE_MOUSE
+                              : qrk::MouseButtonBehavior::NONE );
 
-      mainFb.activate();
+        // == Main render path ==
+        // Step 0: optional shadow pass.
+        if ( opts.shadowMapping ) {
+            qrk::DebugGroup debugGroup( "Directional shadow map" );
+            shadowCamera->setCuboidExtents( opts.shadowCameraCuboidExtents );
+            shadowCamera->setNearPlane( opts.shadowCameraNear );
+            shadowCamera->setFarPlane( opts.shadowCameraFar );
+            shadowCamera->setDistanceFromOrigin( opts.shadowCameraDistance );
 
-      if (opts.drawNormals) {
-        // Draw the normals.
-        normalShader.updateUniforms();
-        model->draw(normalShader);
-      }
+            shadowMap->activate();
+            shadowMap->clear();
+            shadowShader.updateUniforms();
+            model->draw( shadowShader );
+            shadowMap->deactivate();
+        }
 
-      // Draw light source.
-      lampShader.updateUniforms();
-      if (opts.wireframe) {
-        win.enableWireframe();
-      }
-      // TODO: Make point lights more part of the UI.
-      // lightSphere.draw(lampShader);
-      if (opts.wireframe) {
-        win.disableWireframe();
-      }
+        // Step 1: geometry pass. Build the G-Buffer.
+        {
+            qrk::DebugGroup debugGroup( "Geometry pass" );
+            gBuffer->activate();
+            gBuffer->clear();
 
-      // Draw skybox.
-      skyboxShader.updateUniforms();
-      skybox.draw(skyboxShader);
+            geometryPassShader.updateUniforms();
 
-      mainFb.deactivate();
-    }
+            // Draw model.
+            if ( opts.wireframe ) {
+                win.enableWireframe();
+            }
+            model->draw( geometryPassShader );
+            if ( opts.wireframe ) {
+                win.disableWireframe();
+            }
 
-    // Step 4: post processing.
-    if (opts.bloom) {
-      qrk::DebugGroup debugGroup("Bloom pass");
-      bloomPass->multipassDraw(/*sourceFb=*/mainFb);
-    }
+            gBuffer->deactivate();
+        }
 
-    {
-      qrk::DebugGroup debugGroup("Tonemap & gamma");
-      finalFb.activate();
-      finalFb.clear();
+        if ( opts.gBufferVis != GBufferVis::DISABLED ) {
+            {
+                qrk::DebugGroup debugGroup( "G-Buffer vis" );
+                switch ( opts.gBufferVis ) {
+                    case GBufferVis::POSITIONS:
+                    case GBufferVis::AO:
+                        screenQuad.setTexture(
+                            gBuffer->getPositionAOTexture() );
+                        break;
+                    case GBufferVis::NORMALS:
+                    case GBufferVis::ROUGHNESS:
+                        screenQuad.setTexture(
+                            gBuffer->getNormalRoughnessTexture() );
+                        break;
+                    case GBufferVis::ALBEDO:
+                    case GBufferVis::METALLIC:
+                        screenQuad.setTexture(
+                            gBuffer->getAlbedoMetallicTexture() );
+                        break;
+                    case GBufferVis::EMISSION:
+                        screenQuad.setTexture( gBuffer->getEmissionTexture() );
+                        break;
+                    case GBufferVis::DISABLED:
+                        break;
+                };
+                gBufferVisShader.setInt( "gBufferVis",
+                                         static_cast<int>( opts.gBufferVis ) );
+                screenQuad.draw( gBufferVisShader );
+            }
 
-      // Draw to the final FB using the post process shader.
-      postprocessShader.updateUniforms();
-      postprocessShader.setBool("bloom", opts.bloom);
-      postprocessShader.setFloat("bloomMix", opts.bloomMix);
-      postprocessShader.setInt("toneMapping",
-                               static_cast<int>(opts.toneMapping));
-      postprocessShader.setBool("gammaCorrect", opts.gammaCorrect);
-      postprocessShader.setFloat("gamma", static_cast<int>(opts.gamma));
-      screenQuad.setTexture(mainColorAttachment);
-      screenQuad.draw(postprocessShader, postprocessTextureRegistry.get());
+            // TODO: Refactor avoid needing to copy this.
+            {
+                qrk::DebugGroup debugGroup( "Imgui pass" );
+                ImGui_ImplOpenGL3_RenderDrawData( ImGui::GetDrawData() );
+            }
+            return;
+        }
 
-      finalFb.deactivate();
-    }
+        // Step 1.2: optional SSAO pass.
+        // TODO: Extract into an "SSAO pass".
+        if ( opts.ssao ) {
+            qrk::DebugGroup debugGroup( "SSAO pass" );
+            ssaoKernel->setRadius( opts.ssaoRadius );
+            ssaoKernel->setBias( opts.ssaoBias );
 
-    win.setViewport();
+            ssaoBuffer->activate();
+            ssaoBuffer->clear();
 
-    // Finally draw to the screen via the FXAA shader.
-    if (opts.fxaa) {
-      qrk::DebugGroup debugGroup("FXAA");
-      screenQuad.setTexture(finalColorAttachment);
-      screenQuad.draw(fxaaShader);
-    } else {
-      finalFb.blitToDefault(GL_COLOR_BUFFER_BIT);
-    }
+            ssaoShader.updateUniforms();
 
-    // == End render path ==
+            screenQuad.unsetTexture();
+            screenQuad.draw( ssaoShader, ssaoTextureRegistry.get() );
 
-    // Finally, draw ImGui data.
-    {
-      qrk::DebugGroup debugGroup("Imgui pass");
-      ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-    }
-  });
+            ssaoBuffer->deactivate();
 
-  // Cleanup.
-  ImGui_ImplOpenGL3_Shutdown();
-  ImGui_ImplGlfw_Shutdown();
-  ImGui::DestroyContext();
+            // Step 1.2.1: SSAO blur.
+            ssaoBlurredBuffer->activate();
+            ssaoBlurredBuffer->clear();
 
-  return 0;
+            ssaoBlurShader.configureWith( *ssaoKernel, *ssaoBuffer );
+            screenQuad.draw( ssaoBlurShader );
+
+            ssaoBlurredBuffer->deactivate();
+        }
+
+        // Step 2: lighting pass. Draw to the main framebuffer.
+        {
+            qrk::DebugGroup debugGroup( "Deferred lighting pass" );
+            mainFb.activate();
+            mainFb.clear();
+
+            // TODO: Set up environment mapping with the skybox.
+            lightingPassShader.updateUniforms();
+            lightingPassShader.setBool( "shadowMapping", opts.shadowMapping );
+            lightingPassShader.setFloat( "shadowBiasMin", opts.shadowBiasMin );
+            lightingPassShader.setFloat( "shadowBiasMax", opts.shadowBiasMax );
+            lightingPassShader.setBool( "useIBL", opts.useIBL );
+            lightingPassShader.setBool( "ssao", opts.ssao );
+            lightingPassShader.setInt( "lightingModel",
+                                       static_cast<int>( opts.lightingModel ) );
+            // TODO: Pull this out into a material class.
+            lightingPassShader.setVec3( "ambient", opts.ambientColor );
+            lightingPassShader.setFloat( "shininess", opts.shininess );
+            lightingPassShader.setFloat( "emissionIntensity",
+                                         opts.emissionIntensity );
+            lightingPassShader.setFloat( "emissionAttenuation.constant",
+                                         opts.emissionAttenuation.x );
+            lightingPassShader.setFloat( "emissionAttenuation.linear",
+                                         opts.emissionAttenuation.y );
+            lightingPassShader.setFloat( "emissionAttenuation.quadratic",
+                                         opts.emissionAttenuation.z );
+
+            screenQuad.unsetTexture();
+            screenQuad.draw( lightingPassShader,
+                             lightingTextureRegistry.get() );
+
+            mainFb.deactivate();
+        }
+
+        // Step 3: forward render anything else on top.
+        {
+            qrk::DebugGroup debugGroup( "Forward pass" );
+
+            // Before we do so, we have to blit the depth buffer.
+            gBuffer->blit( mainFb, GL_DEPTH_BUFFER_BIT );
+
+            mainFb.activate();
+
+            if ( opts.drawNormals ) {
+                // Draw the normals.
+                normalShader.updateUniforms();
+                model->draw( normalShader );
+            }
+
+            // Draw light source.
+            lampShader.updateUniforms();
+            if ( opts.wireframe ) {
+                win.enableWireframe();
+            }
+            // TODO: Make point lights more part of the UI.
+            // lightSphere.draw(lampShader);
+            if ( opts.wireframe ) {
+                win.disableWireframe();
+            }
+
+            // Draw skybox.
+            skyboxShader.updateUniforms();
+            skybox.draw( skyboxShader );
+
+            mainFb.deactivate();
+        }
+
+        // Step 4: post processing.
+        if ( opts.bloom ) {
+            qrk::DebugGroup debugGroup( "Bloom pass" );
+            bloomPass->multipassDraw( /*sourceFb=*/mainFb );
+        }
+
+        {
+            qrk::DebugGroup debugGroup( "Tonemap & gamma" );
+            finalFb.activate();
+            finalFb.clear();
+
+            // Draw to the final FB using the post process shader.
+            postprocessShader.updateUniforms();
+            postprocessShader.setBool( "bloom", opts.bloom );
+            postprocessShader.setFloat( "bloomMix", opts.bloomMix );
+            postprocessShader.setInt( "toneMapping",
+                                      static_cast<int>( opts.toneMapping ) );
+            postprocessShader.setBool( "gammaCorrect", opts.gammaCorrect );
+            postprocessShader.setFloat( "gamma",
+                                        static_cast<int>( opts.gamma ) );
+            screenQuad.setTexture( mainColorAttachment );
+            screenQuad.draw( postprocessShader,
+                             postprocessTextureRegistry.get() );
+
+            finalFb.deactivate();
+        }
+
+        win.setViewport();
+
+        // Finally draw to the screen via the FXAA shader.
+        if ( opts.fxaa ) {
+            qrk::DebugGroup debugGroup( "FXAA" );
+            screenQuad.setTexture( finalColorAttachment );
+            screenQuad.draw( fxaaShader );
+        } else {
+            finalFb.blitToDefault( GL_COLOR_BUFFER_BIT );
+        }
+
+        // == End render path ==
+
+        // Finally, draw ImGui data.
+        {
+            qrk::DebugGroup debugGroup( "Imgui pass" );
+            ImGui_ImplOpenGL3_RenderDrawData( ImGui::GetDrawData() );
+        }
+    } );
+
+    // Cleanup.
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
+
+    return 0;
 }

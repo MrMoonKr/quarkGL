@@ -1,6 +1,6 @@
 // clang-format off
 // Must precede glfw/glad, to include OpenGL functions.
-#include <qrk/quarkgl.h>
+#include <quarkgl/quarkgl.h>
 // clang-format on
 
 #include <glm/glm.hpp>
@@ -149,109 +149,112 @@ const float quadVertices[] = {
 // clang-format on
 
 int main() {
-  auto win = std::make_shared<qrk::Window>(1280, 960, "Post processing");
-  win->setClearColor(glm::vec4(0.1f, 0.1f, 0.1f, 1.0f));
-  win->enableMouseCapture();
-  win->setEscBehavior(qrk::EscBehavior::UNCAPTURE_MOUSE_OR_CLOSE);
-  win->setMouseButtonBehavior(qrk::MouseButtonBehavior::CAPTURE_MOUSE);
+    auto win = std::make_shared<qrk::Window>( 1280, 960, "Post processing" );
+    win->setClearColor( glm::vec4( 0.1f, 0.1f, 0.1f, 1.0f ) );
+    win->enableMouseCapture();
+    win->setEscBehavior( qrk::EscBehavior::UNCAPTURE_MOUSE_OR_CLOSE );
+    win->setMouseButtonBehavior( qrk::MouseButtonBehavior::CAPTURE_MOUSE );
 
-  auto camera =
-      std::make_shared<qrk::Camera>(/* position */ glm::vec3(0.0f, 1.0f, 3.0f));
-  camera->lookAt(glm::vec3(0.0f));
-  auto cameraControls = std::make_shared<qrk::FlyCameraControls>();
-  win->bindCamera(camera);
-  win->bindCameraControls(cameraControls);
+    auto camera = std::make_shared<qrk::Camera>(
+        /* position */ glm::vec3( 0.0f, 1.0f, 3.0f ) );
+    camera->lookAt( glm::vec3( 0.0f ) );
+    auto cameraControls = std::make_shared<qrk::FlyCameraControls>();
+    win->bindCamera( camera );
+    win->bindCameraControls( cameraControls );
 
-  qrk::Shader mainShader((qrk::ShaderInline(textureVertexSource)),
-                         qrk::ShaderInline(textureFragmentSource));
-  qrk::Shader screenShader((qrk::ShaderInline(screenVertexSource)),
-                           qrk::ShaderInline(screenFragmentSource));
+    qrk::Shader mainShader( ( qrk::ShaderInline( textureVertexSource ) ),
+                            qrk::ShaderInline( textureFragmentSource ) );
+    qrk::Shader screenShader( ( qrk::ShaderInline( screenVertexSource ) ),
+                              qrk::ShaderInline( screenFragmentSource ) );
 
-  // TODO: Clean this up to use mesh primitives.
-  // Create a VAO for the boxes.
-  qrk::VertexArray cubeVarray;
-  cubeVarray.loadVertexData(cubeVertices, sizeof(cubeVertices));
-  cubeVarray.addVertexAttrib(3, GL_FLOAT);
-  cubeVarray.addVertexAttrib(2, GL_FLOAT);
-  cubeVarray.finalizeVertexAttribs();
+    // TODO: Clean this up to use mesh primitives.
+    // Create a VAO for the boxes.
+    qrk::VertexArray cubeVarray;
+    cubeVarray.loadVertexData( cubeVertices, sizeof( cubeVertices ) );
+    cubeVarray.addVertexAttrib( 3, GL_FLOAT );
+    cubeVarray.addVertexAttrib( 2, GL_FLOAT );
+    cubeVarray.finalizeVertexAttribs();
 
-  // Create a VAO for the plane.
-  qrk::VertexArray planeVarray;
-  planeVarray.loadVertexData(planeVertices, sizeof(planeVertices));
-  planeVarray.addVertexAttrib(3, GL_FLOAT);
-  planeVarray.addVertexAttrib(2, GL_FLOAT);
-  planeVarray.finalizeVertexAttribs();
+    // Create a VAO for the plane.
+    qrk::VertexArray planeVarray;
+    planeVarray.loadVertexData( planeVertices, sizeof( planeVertices ) );
+    planeVarray.addVertexAttrib( 3, GL_FLOAT );
+    planeVarray.addVertexAttrib( 2, GL_FLOAT );
+    planeVarray.finalizeVertexAttribs();
 
-  // Create a VAO for the screen quad.
-  qrk::VertexArray quadVarray;
-  quadVarray.loadVertexData(quadVertices, sizeof(quadVertices));
-  quadVarray.addVertexAttrib(2, GL_FLOAT);
-  quadVarray.addVertexAttrib(2, GL_FLOAT);
-  quadVarray.finalizeVertexAttribs();
+    // Create a VAO for the screen quad.
+    qrk::VertexArray quadVarray;
+    quadVarray.loadVertexData( quadVertices, sizeof( quadVertices ) );
+    quadVarray.addVertexAttrib( 2, GL_FLOAT );
+    quadVarray.addVertexAttrib( 2, GL_FLOAT );
+    quadVarray.finalizeVertexAttribs();
 
-  // Load textures.
-  qrk::Texture cubeTexture =
-      qrk::Texture::load("examples/assets/container.jpg");
-  qrk::Texture floorTexture = qrk::Texture::load("examples/assets/metal.png");
+    // Load textures.
+    qrk::Texture cubeTexture =
+        qrk::Texture::load( "examples/assets/container.jpg" );
+    qrk::Texture floorTexture =
+        qrk::Texture::load( "examples/assets/metal.png" );
 
-  // Framebuffer.
-  qrk::Framebuffer fb(win->getSize());
-  auto colorAttachment = fb.attachTexture(qrk::BufferType::COLOR);
-  fb.attachRenderbuffer(qrk::BufferType::DEPTH_AND_STENCIL);
+    // Framebuffer.
+    qrk::Framebuffer fb( win->getSize() );
+    auto colorAttachment = fb.attachTexture( qrk::BufferType::COLOR );
+    fb.attachRenderbuffer( qrk::BufferType::DEPTH_AND_STENCIL );
 
-  screenShader.addUniformSource(win);
+    screenShader.addUniformSource( win );
 
-  printf("Controls:\n");
-  printf("- WASD: movement\n");
-  printf("- Mouse: camera\n");
+    printf( "Controls:\n" );
+    printf( "- WASD: movement\n" );
+    printf( "- Mouse: camera\n" );
 
-  win->loop([&](float deltaTime) {
-    fb.activate();
-    fb.clear();
+    win->loop( [ & ]( float deltaTime ) {
+        fb.activate();
+        fb.clear();
 
-    glm::mat4 view = camera->getViewTransform();
-    glm::mat4 projection = camera->getProjectionTransform();
+        glm::mat4 view = camera->getViewTransform();
+        glm::mat4 projection = camera->getProjectionTransform();
 
-    // Setup shader and textures for the framebuffer.
-    mainShader.activate();
-    mainShader.setMat4("view", view);
-    mainShader.setMat4("projection", projection);
-    mainShader.setInt("texture0", 0);
+        // Setup shader and textures for the framebuffer.
+        mainShader.activate();
+        mainShader.setMat4( "view", view );
+        mainShader.setMat4( "projection", projection );
+        mainShader.setInt( "texture0", 0 );
 
-    glm::mat4 model(1.0f);
+        glm::mat4 model( 1.0f );
 
-    // Draw cubes.
-    cubeVarray.activate();
-    cubeTexture.bindToUnit(0);
-    model = glm::translate(glm::mat4(1.0f), glm::vec3(-1.0f, 0.0f, -1.0f));
-    mainShader.setMat4("model", model);
-    glDrawArrays(GL_TRIANGLES, 0, 36);
+        // Draw cubes.
+        cubeVarray.activate();
+        cubeTexture.bindToUnit( 0 );
+        model = glm::translate( glm::mat4( 1.0f ),
+                                glm::vec3( -1.0f, 0.0f, -1.0f ) );
+        mainShader.setMat4( "model", model );
+        glDrawArrays( GL_TRIANGLES, 0, 36 );
 
-    model = glm::translate(glm::mat4(1.0f), glm::vec3(2.0f, 0.0f, 0.0f));
-    mainShader.setMat4("model", model);
-    glDrawArrays(GL_TRIANGLES, 0, 36);
+        model =
+            glm::translate( glm::mat4( 1.0f ), glm::vec3( 2.0f, 0.0f, 0.0f ) );
+        mainShader.setMat4( "model", model );
+        glDrawArrays( GL_TRIANGLES, 0, 36 );
 
-    // Draw floor.
-    planeVarray.activate();
-    floorTexture.bindToUnit(0);
-    mainShader.setMat4("model", glm::mat4(1.0f));
-    glDrawArrays(GL_TRIANGLES, 0, 6);
-    planeVarray.deactivate();
+        // Draw floor.
+        planeVarray.activate();
+        floorTexture.bindToUnit( 0 );
+        mainShader.setMat4( "model", glm::mat4( 1.0f ) );
+        glDrawArrays( GL_TRIANGLES, 0, 6 );
+        planeVarray.deactivate();
 
-    fb.deactivate();
+        fb.deactivate();
 
-    win->setViewport();
+        win->setViewport();
 
-    // Finally, draw to the screen based on the framebuffer contents.
-    screenShader.updateUniforms();
-    screenShader.activate();
-    screenShader.setInt("screenTexture", 0);
-    quadVarray.activate();
-    glBindTexture(GL_TEXTURE_2D, colorAttachment.id);
-    win->disableDepthTest();
-    glDrawArrays(GL_TRIANGLES, 0, 6);
-    win->enableDepthTest();
-  });
+        // Finally, draw to the screen based on the framebuffer contents.
+        screenShader.updateUniforms();
+        screenShader.activate();
+        screenShader.setInt( "screenTexture", 0 );
+        quadVarray.activate();
+        glBindTexture( GL_TEXTURE_2D, colorAttachment.id );
+        win->disableDepthTest();
+        glDrawArrays( GL_TRIANGLES, 0, 6 );
+        win->enableDepthTest();
+    } );
 
-  return 0;
+    return 0;
 }

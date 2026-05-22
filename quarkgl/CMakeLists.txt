@@ -8,7 +8,9 @@ add_library(quarkgl STATIC ${QUARKGL_HEADERS} ${QUARKGL_SOURCES})
 target_include_directories(
     quarkgl
     PUBLIC
-        "${QUARKGL_GENERATED_INCLUDE_DIR}"
+        "${CMAKE_SOURCE_DIR}"
+    PRIVATE
+        "${CMAKE_CURRENT_SOURCE_DIR}"
 )
 
 target_link_libraries(

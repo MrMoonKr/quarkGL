@@ -11,7 +11,7 @@ target_include_directories(
     glad
     PUBLIC
         "${CMAKE_SOURCE_DIR}/third_party"
-        "${QUARKGL_GENERATED_INCLUDE_DIR}"
+        "${QUARKGL_THIRD_PARTY_INCLUDE_DIR}"
 )
 
 target_link_libraries(glad PUBLIC opengl32)
