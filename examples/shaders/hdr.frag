@@ -11,20 +11,20 @@ uniform int u_toneMapTechnique;
 uniform float u_colorStrength = 1.0f;
 
 void main() {
-  vec3 color = texture(u_screenTexture, texCoords).rgb;
+    vec3 color = texture(u_screenTexture, texCoords).rgb;
 
-  color *= u_colorStrength;
+    color *= u_colorStrength;
 
-  if (u_useHdr) {
-    if (u_toneMapTechnique == 0) {
-      color = qrk_toneMapReinhard(color);
-    } else if (u_toneMapTechnique == 1) {
-      color = qrk_toneMapReinhardLuminance(color);
-    } else if (u_toneMapTechnique == 2) {
-      color = qrk_toneMapAcesApprox(color);
+    if (u_useHdr) {
+        if (u_toneMapTechnique == 0) {
+            color = qrk_tone_map_reinhard(color);
+        } else if (u_toneMapTechnique == 1) {
+            color = qrk_tone_map_reinhard_luminance(color);
+        } else if (u_toneMapTechnique == 2) {
+            color = qrk_tone_map_aces_approx(color);
+        }
     }
-  }
 
-  color = qrk_gammaCorrect(color);
-  fragColor = vec4(color, 1.0);
+    color = qrk_gamma_correct(color);
+    fragColor = vec4(color, 1.0);
 }

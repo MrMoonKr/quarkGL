@@ -2,7 +2,10 @@ load("//quarkgl:quarkgl.bzl", "OPENGL_LINKOPTS")
 
 cc_binary(
     name = "model_render",
-    srcs = ["model_render.cc"],
+    srcs = [
+        "model_render.cc",
+        "spherical_harmonics.cc",
+    ],
     data = [
         "//examples:assets",
     ] + glob([

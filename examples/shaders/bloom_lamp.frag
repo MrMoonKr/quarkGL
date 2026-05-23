@@ -7,9 +7,9 @@
 // An example fragment shader with u_bloom for light sources.
 
 in VS_OUT {
-  vec2 texCoords;
-  vec3 fragPos;
-  vec3 fragNormal;
+    vec2 texCoords;
+    vec3 fragPos;
+    vec3 fragNormal;
 }
 fs_in;
 
@@ -21,13 +21,13 @@ layout(location = 1) out vec4 brightColor;
 uniform vec3 u_lightColor;
 
 void main() {
-  fragColor = vec4(u_lightColor, 1.0);
+    fragColor = vec4(u_lightColor, 1.0);
 
-  // --- Bloom logic ---
-  float luminance = qrk_luminance(fragColor.rgb);
-  if (luminance > 1.0) {
-    brightColor = vec4(fragColor.rgb, 1.0);
-  } else {
-    brightColor = vec4(0.0, 0.0, 0.0, 1.0);
-  }
+    // --- Bloom logic ---
+    float luminance = qrk_luminance(fragColor.rgb);
+    if (luminance > 1.0) {
+        brightColor = vec4(fragColor.rgb, 1.0);
+    } else {
+        brightColor = vec4(0.0, 0.0, 0.0, 1.0);
+    }
 }

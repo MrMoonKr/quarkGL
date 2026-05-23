@@ -18,27 +18,27 @@ uniform float u_emissionStrength;
 uniform QrkAttenuation u_emissionAttenuation;
 
 void main() {
-  // Extract G-Buffer for PBR rendering.
-  vec3 fragPos_viewSpace = texture(u_gPositionAO, texCoords).rgb;
-  float fragAO = texture(u_gPositionAO, texCoords).a;
-  vec3 fragNormal_viewSpace = texture(u_gNormalRoughness, texCoords).rgb;
-  float fragRoughness = texture(u_gNormalRoughness, texCoords).a;
-  vec3 fragAlbedo = texture(u_gAlbedoMetallic, texCoords).rgb;
-  float fragMetallic = texture(u_gAlbedoMetallic, texCoords).a;
-  vec3 fragEmission = texture(u_gEmission, texCoords).rgb;
+    // Extract G-Buffer for PBR rendering.
+    vec3 fragPos_viewSpace = texture(u_gPositionAO, texCoords).rgb;
+    float fragAO = texture(u_gPositionAO, texCoords).a;
+    vec3 fragNormal_viewSpace = texture(u_gNormalRoughness, texCoords).rgb;
+    float fragRoughness = texture(u_gNormalRoughness, texCoords).a;
+    vec3 fragAlbedo = texture(u_gAlbedoMetallic, texCoords).rgb;
+    float fragMetallic = texture(u_gAlbedoMetallic, texCoords).a;
+    vec3 fragEmission = texture(u_gEmission, texCoords).rgb;
 
-  // Shade with normal lights.
-  vec3 color = qrk_shadeAllLightsCookTorranceGGXDeferred(
-      fragAlbedo, fragRoughness, fragMetallic, fragPos_viewSpace,
-      fragNormal_viewSpace);
+    // Shade with normal lights.
+    vec3 color = qrk_shade_all_lights_cook_torrance_ggx_deferred(
+            fragAlbedo, fragRoughness, fragMetallic, fragPos_viewSpace,
+            fragNormal_viewSpace);
 
-  color += qrk_shadeAmbientDeferred(fragAlbedo, u_ambient, /*ao=*/1.0);
+    color += qrk_shade_ambient_deferred(fragAlbedo, u_ambient, /*ao=*/1.0);
 
-  // Add emissions.
-  color += qrk_shadeEmissionDeferred(fragEmission * u_emissionStrength,
+    // Add emissions.
+    color += qrk_shade_emission_deferred(fragEmission * u_emissionStrength,
                                      fragPos_viewSpace, u_emissionAttenuation);
 
-  color = qrk_toneMapAcesApprox(color);
-  color = qrk_gammaCorrect(color);
-  fragColor = vec4(color, 1.0);
+    color = qrk_tone_map_aces_approx(color);
+    color = qrk_gamma_correct(color);
+    fragColor = vec4(color, 1.0);
 }

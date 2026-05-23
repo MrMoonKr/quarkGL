@@ -21,28 +21,28 @@ uniform QrkAttenuation u_emissionAttenuation;
 uniform bool u_useSsao;
 
 void main() {
-  // Extract G-Buffer for Blinn-Phong shading.
-  vec3 fragPos_viewSpace = texture(u_gPositionAO, texCoords).rgb;
-  vec3 fragNormal_viewSpace = texture(u_gNormalRoughness, texCoords).rgb;
-  vec3 fragAlbedo = texture(u_gAlbedoMetallic, texCoords).rgb;
-  vec3 fragSpecular = vec3(texture(u_gAlbedoMetallic, texCoords).a);
-  vec3 fragEmission = texture(u_gEmission, texCoords).rgb;
-  float fragAmbientOcclusion = texture(qrk_ssao, texCoords).r;
+    // Extract G-Buffer for Blinn-Phong shading.
+    vec3 fragPos_viewSpace = texture(u_gPositionAO, texCoords).rgb;
+    vec3 fragNormal_viewSpace = texture(u_gNormalRoughness, texCoords).rgb;
+    vec3 fragAlbedo = texture(u_gAlbedoMetallic, texCoords).rgb;
+    vec3 fragSpecular = vec3(texture(u_gAlbedoMetallic, texCoords).a);
+    vec3 fragEmission = texture(u_gEmission, texCoords).rgb;
+    float fragAmbientOcclusion = texture(qrk_ssao, texCoords).r;
 
-  if (!u_useSsao) {
-    fragAmbientOcclusion = 1.0;
-  }
+    if (!u_useSsao) {
+        fragAmbientOcclusion = 1.0;
+    }
 
-  // Shade with normal lights.
-  vec3 color = qrk_shadeAllLightsBlinnPhongDeferred(
-      fragAlbedo, fragSpecular, u_ambient, u_shininess, fragPos_viewSpace,
-      fragNormal_viewSpace, /*shadow=*/0.0, fragAmbientOcclusion);
+    // Shade with normal lights.
+    vec3 color = qrk_shade_all_lights_blinn_phong_deferred(
+            fragAlbedo, fragSpecular, u_ambient, u_shininess, fragPos_viewSpace,
+            fragNormal_viewSpace, /*shadow=*/0.0, fragAmbientOcclusion);
 
-  // Add emissions.
-  color += qrk_shadeEmissionDeferred(fragEmission, fragPos_viewSpace,
+    // Add emissions.
+    color += qrk_shade_emission_deferred(fragEmission, fragPos_viewSpace,
                                      u_emissionAttenuation);
 
-  color = qrk_toneMapAcesApprox(color);
-  color = qrk_gammaCorrect(color);
-  fragColor = vec4(color, 1.0);
+    color = qrk_tone_map_aces_approx(color);
+    color = qrk_gamma_correct(color);
+    fragColor = vec4(color, 1.0);
 }

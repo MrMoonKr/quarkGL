@@ -9,10 +9,10 @@
 // An example fragment shader with PBR illumination.
 
 in VS_OUT {
-  vec2 texCoords;
-  vec3 fragPos_viewSpace;
-  vec3 fragNormal_viewSpace;
-  mat3 fragTBN_viewSpace;  // Transforms from tangent frame to u_view frame.
+    vec2 texCoords;
+    vec3 fragPos_viewSpace;
+    vec3 fragNormal_viewSpace;
+    mat3 fragTBN_viewSpace;  // Transforms from tangent frame to u_view frame.
 }
 fs_in;
 
@@ -27,46 +27,46 @@ out vec4 fragColor;
 uniform QrkMaterial u_material;
 
 void main() {
-  // Lookup normal and map from tangent space to u_view space.
-  vec3 normal_viewSpace =
-      qrk_getNormal(u_material, fs_in.texCoords, fs_in.fragTBN_viewSpace,
-                    fs_in.fragNormal_viewSpace);
+    // Lookup normal and map from tangent space to u_view space.
+    vec3 normal_viewSpace =
+            qrk_get_normal(u_material, fs_in.texCoords, fs_in.fragTBN_viewSpace,
+                                        fs_in.fragNormal_viewSpace);
 
-  vec3 result;
-  // Shade with normal lights.
-  if (u_usePBR) {
-    if (u_useTextures) {
-      result = qrk_shadeAllLightsCookTorranceGGX(
-          u_material, fs_in.fragPos_viewSpace, normal_viewSpace, fs_in.texCoords);
-      result += qrk_shadeAmbient(u_material, u_baseColor, fs_in.texCoords);
+    vec3 result;
+    // Shade with normal lights.
+    if (u_usePBR) {
+        if (u_useTextures) {
+            result = qrk_shade_all_lights_cook_torrance_ggx(
+                    u_material, fs_in.fragPos_viewSpace, normal_viewSpace, fs_in.texCoords);
+            result += qrk_shade_ambient(u_material, u_baseColor, fs_in.texCoords);
+        } else {
+            // Even though we aren't using deferred shading, we can use the function
+            // to pass colors directly and avoid textures.
+            result = qrk_shade_all_lights_cook_torrance_ggx_deferred(
+                    /*albedo=*/u_baseColor, u_roughness, u_metallic, fs_in.fragPos_viewSpace,
+                    normal_viewSpace);
+            result +=
+                    qrk_shade_ambient_deferred(u_baseColor, u_material.u_ambient, /*ao=*/1.0);
+        }
     } else {
-      // Even though we aren't using deferred shading, we can use the function
-      // to pass colors directly and avoid textures.
-      result = qrk_shadeAllLightsCookTorranceGGXDeferred(
-          /*albedo=*/u_baseColor, u_roughness, u_metallic, fs_in.fragPos_viewSpace,
-          normal_viewSpace);
-      result +=
-          qrk_shadeAmbientDeferred(u_baseColor, u_material.u_ambient, /*ao=*/1.0);
+        if (u_useTextures) {
+            result = qrk_shade_all_lights_blinn_phong(u_material, fs_in.fragPos_viewSpace,
+                                                                                        normal_viewSpace, fs_in.texCoords);
+        } else {
+            // Even though we aren't using deferred shading, we can use the function
+            // to pass colors directly and avoid textures.
+            result = qrk_shade_all_lights_blinn_phong_deferred(
+                    /*albedo=*/u_baseColor, /*specular=*/vec3(0.5), u_material.u_ambient,
+                    u_material.u_shininess, fs_in.fragPos_viewSpace, normal_viewSpace);
+        }
     }
-  } else {
-    if (u_useTextures) {
-      result = qrk_shadeAllLightsBlinnPhong(u_material, fs_in.fragPos_viewSpace,
-                                            normal_viewSpace, fs_in.texCoords);
-    } else {
-      // Even though we aren't using deferred shading, we can use the function
-      // to pass colors directly and avoid textures.
-      result = qrk_shadeAllLightsBlinnPhongDeferred(
-          /*albedo=*/u_baseColor, /*specular=*/vec3(0.5), u_material.u_ambient,
-          u_material.u_shininess, fs_in.fragPos_viewSpace, normal_viewSpace);
-    }
-  }
 
-  // Add emissions.
-  result +=
-      qrk_shadeEmission(u_material, fs_in.fragPos_viewSpace, fs_in.texCoords);
+    // Add emissions.
+    result +=
+            qrk_shade_emission(u_material, fs_in.fragPos_viewSpace, fs_in.texCoords);
 
-  fragColor = vec4(result, qrk_materialAlpha(u_material, fs_in.texCoords));
+    fragColor = vec4(result, qrk_material_alpha(u_material, fs_in.texCoords));
 
-  fragColor.rgb = qrk_toneMapReinhard(fragColor.rgb);
-  fragColor.rgb = qrk_gammaCorrect(fragColor.rgb);
+    fragColor.rgb = qrk_tone_map_reinhard(fragColor.rgb);
+    fragColor.rgb = qrk_gamma_correct(fragColor.rgb);
 }

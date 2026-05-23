@@ -3,7 +3,10 @@
 #include <quarkgl/quarkgl.h>
 // clang-format on
 
+#include <algorithm>
 #include <cstdint>
+#include <cmath>
+#include <string>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -27,6 +30,7 @@
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
+#include "model_render/spherical_harmonics.h"
 
 ABSL_FLAG( std::string, model, "", "Path to a model file" );
 
@@ -104,6 +108,7 @@ enum class CameraControlType {
 enum class LightingModel {
     BLINN_PHONG = 0,
     COOK_TORRANCE_GGX,
+    SPHERICAL_HARMONICS,
 };
 
 enum class SkyboxImage {
@@ -300,9 +305,15 @@ void renderImGuiUI( ModelRenderOptions& opts, UIContext ctx ) {
     if ( ImGui::CollapsingHeader( "Rendering" ) ) {
         ImGui::Combo( "Lighting model",
                       reinterpret_cast<int*>( &opts.lightingModel ),
-                      "Blinn-Phong\0Cook-Torrance GGX\0\0" );
+                      "Blinn-Phong\0Cook-Torrance GGX\0Spherical Harmonics\0\0" );
         ImGui::SameLine();
         imguiHelpMarker( "Which lighting model to use for shading." );
+
+        if ( opts.lightingModel == LightingModel::SPHERICAL_HARMONICS ) {
+            ImGui::TextWrapped(
+                "Uses 2nd-order spherical harmonics from the selected skybox "
+                "to approximate diffuse environment lighting." );
+        }
 
         ImGui::Separator();
         if ( ImGui::TreeNode( "Directional light" ) ) {
@@ -536,7 +547,8 @@ void loadSkyboxImage(
     SkyboxImage skyboxImage, qrk::SkyboxMesh& skybox,
     qrk::EquirectCubemapConverter& equirectCubemapConverter,
     qrk::CubemapIrradianceCalculator& irradianceCalculator,
-    qrk::GGXPrefilteredEnvMapCalculator& prefilteredEnvMapCalculator ) {
+    qrk::GGXPrefilteredEnvMapCalculator& prefilteredEnvMapCalculator,
+    model_render::ShDiffuseCoefficients& shDiffuseCoefficients ) {
     std::string hdrPath;
     switch ( skyboxImage ) {
         case SkyboxImage::ALEXS_APT:
@@ -561,6 +573,9 @@ void loadSkyboxImage(
             hdrPath = "examples/assets/ibl/WinterForest.hdr";
             break;
     }
+
+    shDiffuseCoefficients =
+        model_render::calculateDiffuseShCoefficientsFromHdr( hdrPath );
 
     qrk::Texture hdr = qrk::Texture::loadHdr( hdrPath.c_str() );
 
@@ -743,10 +758,13 @@ int main( int argc, char** argv ) {
     lightingTextureRegistry->addTextureSource( brdfLUT );
 
     qrk::SkyboxMesh skybox;
+    model_render::ShDiffuseCoefficients shDiffuseCoefficients;
+    shDiffuseCoefficients.fill( glm::vec3( 0.0f ) );
 
     // Load the actual env map and generate IBL textures.
     loadSkyboxImage( opts.skyboxImage, skybox, equirectCubemapConverter,
-                     *irradianceCalculator, *prefilteredEnvMapCalculator );
+                     *irradianceCalculator, *prefilteredEnvMapCalculator,
+                     shDiffuseCoefficients );
 
     // Prepare some debug shaders.
     qrk::Shader normalShader(
@@ -836,7 +854,8 @@ int main( int argc, char** argv ) {
         if ( opts.skyboxImage != prevOpts.skyboxImage ) {
             loadSkyboxImage( opts.skyboxImage, skybox, equirectCubemapConverter,
                              *irradianceCalculator,
-                             *prefilteredEnvMapCalculator );
+                             *prefilteredEnvMapCalculator,
+                             shDiffuseCoefficients );
         }
 
         win.setMouseButtonBehavior(
@@ -959,6 +978,8 @@ int main( int argc, char** argv ) {
             lightingPassShader.setBool( "u_ssao", opts.ssao );
             lightingPassShader.setInt( "u_lightingModel",
                                        static_cast<int>( opts.lightingModel ) );
+            model_render::setDiffuseShUniforms( lightingPassShader,
+                                                shDiffuseCoefficients );
             // TODO: Pull this out into a material class.
             lightingPassShader.setVec3( "u_ambient", opts.ambientColor );
             lightingPassShader.setFloat( "u_shininess", opts.shininess );

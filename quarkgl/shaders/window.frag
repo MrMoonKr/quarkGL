@@ -7,9 +7,11 @@ uniform float qrk_deltaTime;
 uniform int qrk_windowWidth;
 uniform int qrk_windowHeight;
 
-bool qrk_isWindowLeftHalf() { return gl_FragCoord.x < (qrk_windowWidth / 2); }
-bool qrk_isWindowRightHalf() { return gl_FragCoord.x >= (qrk_windowWidth / 2); }
-bool qrk_isWindowBottomHalf() {
-  return gl_FragCoord.y < (qrk_windowHeight / 2);
+bool qrk_is_window_left_half() { return gl_FragCoord.x < (qrk_windowWidth / 2); }
+bool qrk_is_window_right_half() { return gl_FragCoord.x >= (qrk_windowWidth / 2); }
+
+bool qrk_is_window_bottom_half() {
+    return gl_FragCoord.y < (qrk_windowHeight / 2);
 }
-bool qrk_isWindowTopHalf() { return gl_FragCoord.y >= (qrk_windowHeight / 2); }
+
+bool qrk_is_window_top_half() { return gl_FragCoord.y >= (qrk_windowHeight / 2); }

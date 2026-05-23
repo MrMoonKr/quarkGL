@@ -1,4 +1,8 @@
-add_executable(model_render "${CMAKE_CURRENT_SOURCE_DIR}/model_render.cc")
+add_executable(
+    model_render
+    "${CMAKE_CURRENT_SOURCE_DIR}/model_render.cc"
+    "${CMAKE_CURRENT_SOURCE_DIR}/spherical_harmonics.cc"
+)
 
 target_link_libraries(
     model_render

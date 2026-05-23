@@ -7,10 +7,10 @@
 // An example fragment shader that uses normal mapping.
 
 in VS_OUT {
-  vec2 texCoords;
-  vec3 fragPos_viewSpace;
-  vec3 fragNormal_viewSpace;
-  mat3 fragTBN_viewSpace;  // Transforms from tangent frame to u_view frame.
+    vec2 texCoords;
+    vec3 fragPos_viewSpace;
+    vec3 fragNormal_viewSpace;
+    mat3 fragTBN_viewSpace;  // Transforms from tangent frame to u_view frame.
 }
 fs_in;
 
@@ -22,31 +22,31 @@ uniform bool u_useVertexNormals;
 uniform bool u_renderNormals;
 
 void main() {
-  // Calculate the normal, either using vertex normals or the normal map.
-  vec3 normal_viewSpace;
-  if (u_useVertexNormals) {
-    normal_viewSpace = normalize(fs_in.fragNormal_viewSpace);
-  } else {
-    // Lookup normal and map from tangent space to u_view space.
-    normal_viewSpace =
-        normalize(fs_in.fragTBN_viewSpace *
-                  qrk_sampleNormalMap(u_normalMap, fs_in.texCoords));
-  }
+    // Calculate the normal, either using vertex normals or the normal map.
+    vec3 normal_viewSpace;
+    if (u_useVertexNormals) {
+        normal_viewSpace = normalize(fs_in.fragNormal_viewSpace);
+    } else {
+        // Lookup normal and map from tangent space to u_view space.
+        normal_viewSpace =
+                normalize(fs_in.fragTBN_viewSpace *
+                                    qrk_sample_normal_map(u_normalMap, fs_in.texCoords));
+    }
 
-  // Optionally render normals instead of lighting.
-  if (u_renderNormals) {
-    fragColor = qrk_normalColor(normal_viewSpace);
-    return;
-  }
+    // Optionally render normals instead of lighting.
+    if (u_renderNormals) {
+        fragColor = qrk_normal_color(normal_viewSpace);
+        return;
+    }
 
-  // Shade with normal lights.
-  vec3 result = qrk_shadeAllLightsBlinnPhong(u_material, fs_in.fragPos_viewSpace,
+    // Shade with normal lights.
+    vec3 result = qrk_shade_all_lights_blinn_phong(u_material, fs_in.fragPos_viewSpace,
                                              normal_viewSpace, fs_in.texCoords);
 
-  // Add emissions.
-  result +=
-      qrk_shadeEmission(u_material, fs_in.fragPos_viewSpace, fs_in.texCoords);
+    // Add emissions.
+    result +=
+            qrk_shade_emission(u_material, fs_in.fragPos_viewSpace, fs_in.texCoords);
 
-  fragColor = vec4(result, qrk_materialAlpha(u_material, fs_in.texCoords));
-  fragColor.rgb = qrk_gammaCorrect(fragColor.rgb);
+    fragColor = vec4(result, qrk_material_alpha(u_material, fs_in.texCoords));
+    fragColor.rgb = qrk_gamma_correct(fragColor.rgb);
 }

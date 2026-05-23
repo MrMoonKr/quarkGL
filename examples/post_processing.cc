@@ -64,20 +64,20 @@ out vec4 fragColor;
 uniform sampler2D u_screenTexture;
 
 void main() {
-  if (qrk_isWindowLeftHalf()) {
-    if (qrk_isWindowTopHalf()) {
+  if (qrk_is_window_left_half()) {
+    if (qrk_is_window_top_half()) {
       fragColor = texture(u_screenTexture, texCoords);
     } else {
-      fragColor = qrk_blurKernel(u_screenTexture, texCoords);
+      fragColor = qrk_blur_kernel(u_screenTexture, texCoords);
     }
   } else {
-    if (qrk_isWindowTopHalf()) {
+    if (qrk_is_window_top_half()) {
       fragColor = qrk_grayscale(texture(u_screenTexture, texCoords));
     } else {
-      fragColor = qrk_edgeKernel(u_screenTexture, texCoords);
+      fragColor = qrk_edge_kernel(u_screenTexture, texCoords);
     }
   }
-  fragColor.rgb = qrk_gammaCorrect(fragColor.rgb);
+  fragColor.rgb = qrk_gamma_correct(fragColor.rgb);
 }
 )SHADER";
 

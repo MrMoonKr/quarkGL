@@ -8,5 +8,5 @@ uniform sampler2D u_screenTexture;
 uniform bool u_horizontal;
 
 void main() {
-  fragColor = qrk_gaussianBlurOnePass(u_screenTexture, texCoords, u_horizontal);
+    fragColor = qrk_gaussian_blur_one_pass(u_screenTexture, texCoords, u_horizontal);
 }

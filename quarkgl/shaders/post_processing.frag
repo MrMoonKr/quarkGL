@@ -23,102 +23,102 @@ float qrk_defaultGaussianWeights[5] =
 /**
  * Applies a 3x3 kernel using a sampler2D and fragment coordinates.
  */
-vec4 qrk_applyKernel(sampler2D u_screenTexture, vec2 texCoords, float kernel[9]) {
-  vec3 samples[9];
-  for (int i = 0; i < 9; i++) {
-    samples[i] = vec3(texture(u_screenTexture, texCoords + qrk_kernelOffsets[i]));
-  }
+vec4 qrk_apply_kernel(sampler2D u_screenTexture, vec2 texCoords, float kernel[9]) {
+    vec3 samples[9];
+    for (int i = 0; i < 9; i++) {
+        samples[i] = vec3(texture(u_screenTexture, texCoords + qrk_kernelOffsets[i]));
+    }
 
-  vec3 color = vec3(0.0);
-  for (int i = 0; i < 9; i++) {
-    color += samples[i] * kernel[i];
-  }
-  return vec4(color, texture(u_screenTexture, texCoords).a);
+    vec3 color = vec3(0.0);
+    for (int i = 0; i < 9; i++) {
+        color += samples[i] * kernel[i];
+    }
+    return vec4(color, texture(u_screenTexture, texCoords).a);
 }
 
 /** Applies a sharpening kernel. */
-vec4 qrk_sharpenKernel(sampler2D u_screenTexture, vec2 texCoords) {
-  // clang-format off
-  float kernel[9] = float[](
-      -1, -1, -1,
-      -1,  9, -1,
-      -1, -1, -1
-  );
-  // clang-format on
-  return qrk_applyKernel(u_screenTexture, texCoords, kernel);
+vec4 qrk_sharpen_kernel(sampler2D u_screenTexture, vec2 texCoords) {
+    // clang-format off
+    float kernel[9] = float[](
+        -1, -1, -1,
+        -1,  9, -1,
+        -1, -1, -1
+    );
+    // clang-format on
+    return qrk_apply_kernel(u_screenTexture, texCoords, kernel);
 }
 
 /** Applies a simple blurring kernel. */
-vec4 qrk_blurKernel(sampler2D u_screenTexture, vec2 texCoords) {
-  // clang-format off
-  float kernel[9] = float[](
-      1.0 / 16, 2.0 / 16, 1.0 / 16,
-      2.0 / 16, 4.0 / 16, 2.0 / 16,
-      1.0 / 16, 2.0 / 16, 1.0 / 16
-  );
-  // clang-format on
-  return qrk_applyKernel(u_screenTexture, texCoords, kernel);
+vec4 qrk_blur_kernel(sampler2D u_screenTexture, vec2 texCoords) {
+    // clang-format off
+    float kernel[9] = float[](
+        1.0 / 16, 2.0 / 16, 1.0 / 16,
+        2.0 / 16, 4.0 / 16, 2.0 / 16,
+        1.0 / 16, 2.0 / 16, 1.0 / 16
+    );
+    // clang-format on
+    return qrk_apply_kernel(u_screenTexture, texCoords, kernel);
 }
 
 /** Applies a edge detection kernel. */
-vec4 qrk_edgeKernel(sampler2D u_screenTexture, vec2 texCoords) {
-  // clang-format off
-  float kernel[9] = float[](
-      1,  1,  1,
-      1, -8,  1,
-      1,  1,  1
-  );
-  // clang-format on
-  return qrk_applyKernel(u_screenTexture, texCoords, kernel);
+vec4 qrk_edge_kernel(sampler2D u_screenTexture, vec2 texCoords) {
+    // clang-format off
+    float kernel[9] = float[](
+        1,  1,  1,
+        1, -8,  1,
+        1,  1,  1
+    );
+    // clang-format on
+    return qrk_apply_kernel(u_screenTexture, texCoords, kernel);
 }
 
 /**
  * Inverts the given fragment color.
  */
-vec4 qrk_invertColor(vec4 color) { return vec4(1.0 - color.rgb, color.a); }
+vec4 qrk_invert_color(vec4 color) { return vec4(1.0 - color.rgb, color.a); }
 
 /**
  * Grayscales the given fragment color, taking into account human eye
  * sensitivity.
  */
 vec4 qrk_grayscale(vec4 color) {
-  // Weighted average, based on the sensitivity of the human eye.
-  float weightedAverage =
-      0.2126 * color.r + 0.7152 * color.g + 0.0722 * color.b;
-  return vec4(weightedAverage, weightedAverage, weightedAverage, color.a);
+    // Weighted average, based on the sensitivity of the human eye.
+    float weightedAverage =
+        0.2126 * color.r + 0.7152 * color.g + 0.0722 * color.b;
+    return vec4(weightedAverage, weightedAverage, weightedAverage, color.a);
 }
 
 /**
  * Grayscales the given fragment color. Does not take into account eye
  * sensitivity.
  */
-vec4 qrk_grayscaleSimple(vec4 color) {
-  float average = (color.r + color.g + color.b) / 3.0;
-  return vec4(average, average, average, color.a);
+vec4 qrk_grayscale_simple(vec4 color) {
+    float average = (color.r + color.g + color.b) / 3.0;
+    return vec4(average, average, average, color.a);
 }
 
 /**
  * Performs a single pass of gaussian blur in either the x or y direction.
  */
-vec4 qrk_gaussianBlurOnePass(sampler2D image, vec2 texCoords, bool u_horizontal) {
-  vec2 texOffset = 1.0 / textureSize(image, /*mip=*/0);
-  // Begin aggregating samples.
-  // TODO: This doesn't handle alpha. Use premultiplied alpha?
-  vec3 result = texture(image, texCoords).rgb * qrk_defaultGaussianWeights[0];
-  if (u_horizontal) {
-    for (int i = 1; i < 5; i++) {
-      result += texture(image, texCoords + vec2(texOffset.x * i, 0.0)).rgb *
+vec4 qrk_gaussian_blur_one_pass(sampler2D image, vec2 texCoords, bool u_horizontal) {
+    vec2 texOffset = 1.0 / textureSize(image, /*mip=*/0);
+    // Begin aggregating samples.
+    // TODO: This doesn't handle alpha. Use premultiplied alpha?
+    vec3 result = texture(image, texCoords).rgb * qrk_defaultGaussianWeights[0];
+    if (u_horizontal) {
+        for (int i = 1; i < 5; i++) {
+            result += texture(image, texCoords + vec2(texOffset.x * i, 0.0)).rgb *
                 qrk_defaultGaussianWeights[i];
-      result += texture(image, texCoords - vec2(texOffset.x * i, 0.0)).rgb *
+            result += texture(image, texCoords - vec2(texOffset.x * i, 0.0)).rgb *
                 qrk_defaultGaussianWeights[i];
+        }
+    } else {
+        for (int i = 1; i < 5; i++) {
+            result += texture(image, texCoords + vec2(0.0, texOffset.y * i)).rgb *
+                qrk_defaultGaussianWeights[i];
+            result += texture(image, texCoords - vec2(0.0, texOffset.y * i)).rgb *
+                qrk_defaultGaussianWeights[i];
+        }
     }
-  } else {
-    for (int i = 1; i < 5; i++) {
-      result += texture(image, texCoords + vec2(0.0, texOffset.y * i)).rgb *
-                qrk_defaultGaussianWeights[i];
-      result += texture(image, texCoords - vec2(0.0, texOffset.y * i)).rgb *
-                qrk_defaultGaussianWeights[i];
-    }
-  }
-  return vec4(result, 1.0);
+    return vec4(result, 1.0);
 }
